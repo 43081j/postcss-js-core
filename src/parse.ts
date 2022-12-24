@@ -12,7 +12,7 @@ import {extractTemplatesFromSource} from './extract.js';
 import {computeReplacedSource} from './replacements.js';
 import {computeNormalisedSource} from './normalise.js';
 import {SyntaxOptions, ExtractedStylesheet} from './types.js';
-import {createPlaceholder} from './placeholders.js';
+import {createPlaceholderFunc} from './placeholders.js';
 
 export type PostcssParseOptions = Pick<ProcessOptions, 'map' | 'from'>;
 
@@ -29,7 +29,8 @@ function parseStyles(
   postcssOptions?: PostcssParseOptions
 ): Document {
   const extractedStyles = extractTemplatesFromSource(source, options);
-  const computePlaceholder = options.placeholder ?? createPlaceholder;
+  const computePlaceholder =
+    options.placeholder ?? createPlaceholderFunc(options);
 
   const doc = new Document();
   let currentOffset = 0;

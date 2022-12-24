@@ -1,6 +1,6 @@
-import {PlaceholderFunc} from './types.js';
+import {PlaceholderFunc, SyntaxOptions} from './types.js';
 
-type Position =
+export type Position =
   | 'block'
   | 'statement'
   | 'default'
@@ -10,13 +10,19 @@ type Position =
 
 const whitespacePattern = /\s/;
 
-const defaultPlaceholder: PlaceholderFunc = (key) => `POSTCSS_LIT_${key}`;
+type PlaceholderFuncWithSyntax = (key: number, syntaxId: string) => string;
 
-const placeholderMapping: Partial<Record<Position, PlaceholderFunc>> = {
-  block: (key) => `/* POSTCSS_LIT_${key} */`,
-  statement: (key) => `/* POSTCSS_LIT_${key} */`,
-  property: (key) => `--POSTCSS_LIT_${key}`
-};
+const defaultPlaceholder: PlaceholderFuncWithSyntax = (
+  key: number,
+  syntaxId: string
+): string => `POSTCSS_${syntaxId}_${key}`;
+
+const placeholderMapping: Partial<Record<Position, PlaceholderFuncWithSyntax>> =
+  {
+    block: (key, syntaxId) => `/* POSTCSS_${syntaxId}_${key} */`,
+    statement: (key, syntaxId) => `/* POSTCSS_${syntaxId}_${key} */`,
+    property: (key, syntaxId) => `--POSTCSS_${syntaxId}_${key}`
+  };
 
 /**
  * Finds the first non-space character of a string
@@ -48,7 +54,10 @@ function findFirstNonSpaceChar(str: string): string | null {
  * @param {string=} suffix Source suffix to scan
  * @return {boolean}
  */
-function computePossiblePosition(prefix: string, suffix?: string): Position {
+export function computePossiblePosition(
+  prefix: string,
+  suffix?: string
+): Position {
   let possiblyInComment = false;
   let possiblePosition: Position = 'default';
   for (let i = prefix.length; i > 0; i--) {
@@ -111,21 +120,17 @@ function computePossiblePosition(prefix: string, suffix?: string): Position {
 
 /**
  * Computes the placeholder for an expression
- * @param {number} i Expression index
- * @param {string=} prefix Source prefix so far
- * @param {string=} suffix Source suffix
- * @return {string}
+ * @param {SyntaxOptions} options Syntax options
+ * @return {PlaceholderFunc}
  */
-export function createPlaceholder(
-  i: number,
-  prefix?: string,
-  suffix?: string
-): string {
-  if (!prefix) {
-    return defaultPlaceholder(i);
-  }
+export function createPlaceholderFunc(options: SyntaxOptions): PlaceholderFunc {
+  return (i, before, after) => {
+    if (!before) {
+      return defaultPlaceholder(i, options.id);
+    }
 
-  const position = computePossiblePosition(prefix, suffix);
+    const position = computePossiblePosition(before, after);
 
-  return (placeholderMapping[position] ?? defaultPlaceholder)(i);
+    return (placeholderMapping[position] ?? defaultPlaceholder)(i, options.id);
+  };
 }

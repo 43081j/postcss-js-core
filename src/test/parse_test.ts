@@ -130,5 +130,17 @@ describe('parse', () => {
         line: 5
       });
     });
+
+    it('should use default placeholders if none set', () => {
+      const parse = createParser({id: 'foo', tagNames: ['css']});
+      const source = `
+        css\`
+          .foo { $\{expr} }
+        \`;
+      `;
+      const doc = parse(source);
+
+      expect(doc.toString()).to.equal('  .foo { /* POSTCSS_foo_0 */ }\n');
+    });
   });
 });
