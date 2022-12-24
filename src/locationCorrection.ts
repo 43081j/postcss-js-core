@@ -17,7 +17,7 @@ const correctLocation = (
   const nodeOffset = node.quasi.range[0];
   let lineOffset = nodeLoc.start.line - 1;
   let newOffset = loc.offset + nodeOffset + 1;
-  let currentLine = 1;
+  let currentLine = 1 + lineOffset;
   let columnOffset = nodeLoc.start.column + 1;
 
   if (state?.prefixOffsets) {
