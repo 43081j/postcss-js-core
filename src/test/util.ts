@@ -36,7 +36,7 @@ export function getSourceForNodeByLoc(source: string, node: Node): string {
 
   for (let i = startLineIndex; i < loc.end.line; i++) {
     const line = lines[i];
-    if (line) {
+    if (line !== undefined) {
       let offsetStart = 0;
       let offsetEnd = line.length;
 

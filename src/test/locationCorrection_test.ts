@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {Root, Document, Parser, Declaration, Rule} from 'postcss';
+import {Root, Document, Parser, Declaration, Rule, Comment} from 'postcss';
 import {createParser} from '../parse.js';
 import {getSourceForNodeByLoc, getSourceForNodeByRange} from './util.js';
 
@@ -14,360 +14,511 @@ describe('locationCorrection', () => {
     parse = createParser({id: 'foo', tagNames: ['css']});
   });
 
-  describe('locationCorrectionWalker', () => {
-    describe('basic locations', () => {
-      it('should correct single root', () => {
-        const source = `
-          css\`
-            .foo { color: hotpink; }
-          \`;
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-
-        expect(root.source!.start).to.deep.equal({
-          line: 3,
-          column: 11,
-          offset: 26
-        });
-        expect(root.source!.end).to.deep.equal(undefined);
-      });
-
-      it('should correct multiple roots', () => {
-        const source = `
-          css\`
-            .foo { color: hotpink; }
-          \`;
-
-          css\`
-            .bar { color: hotpink; }
-          \`;
-        `;
-        const doc = parse(source);
-        const root0 = doc.nodes[0] as Root;
-        const root1 = doc.nodes[1] as Root;
-
-        expect(root0.source!.start).to.deep.equal({
-          line: 3,
-          column: 11,
-          offset: 26
-        });
-        expect(root0.source!.end).to.deep.equal(undefined);
-        expect(root1.source!.start).to.deep.equal({
-          line: 7,
-          column: 11,
-          offset: 92
-        });
-        expect(root1.source!.end).to.deep.equal(undefined);
-      });
-
-      it('should account for prefix offsets', () => {
-        const source = `
-          css\`\t\t
-            .foo { color: hotpink; }
-          \`;
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-
-        expect(root.source!.start).to.deep.equal({
-          line: 3,
-          column: 11,
-          offset: 28
-        });
-        expect(root.source!.end).to.deep.equal(undefined);
-      });
-
-      it('should handle lack of prefix offsets', () => {
-        const source = `css\`.foo { color: hotpink; }\`;`;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-
-        expect(root.source!.start).to.deep.equal({
-          line: 1,
-          column: 5,
-          offset: 4
-        });
-        expect(root.source!.end).to.deep.equal(undefined);
-      });
-
-      it('should account for base indentation', () => {
-        const source = `
-          function deeplyIndented() {
-            css\`
-              .foo { color: hotpink; }
-            \`;
-          }
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-        const rule = root.nodes[0] as Rule;
-
-        expect(root.source!.start).to.deep.equal({
-          line: 4,
-          column: 13,
-          offset: 68
-        });
-        expect(root.source!.end).to.deep.equal(undefined);
-        expect(getSourceForNodeByLoc(source, rule)).to.equal(
-          '.foo { color: hotpink; }'
-        );
-        expect(getSourceForNodeByRange(source, rule)).to.equal(
-          '.foo { color: hotpink; }'
-        );
-      });
-
-      it('should account for inconsistent indentation', () => {
-        const source = `
-          function freakishlyDeindented() {
+  describe('basic locations', () => {
+    it('should correct single root', () => {
+      const source = `
         css\`
           .foo { color: hotpink; }
-            \`;
-          }
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-        const rule = root.nodes[0] as Rule;
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
 
-        expect(root.source!.start).to.deep.equal({
-          line: 4,
-          column: 1,
-          offset: 58
-        });
-        expect(root.source!.end).to.deep.equal(undefined);
-        expect(getSourceForNodeByLoc(source, rule)).to.equal(
-          '.foo { color: hotpink; }'
-        );
-        expect(getSourceForNodeByRange(source, rule)).to.equal(
-          '.foo { color: hotpink; }'
-        );
+      expect(root.source!.start).to.deep.equal({
+        line: 3,
+        column: 9,
+        offset: 22
       });
+      expect(root.source!.end).to.deep.equal(undefined);
     });
 
-    describe('expressions', () => {
-      it('should handle single-line expr on single-line css', () => {
-        const source = `
-          css\`.foo { $\{expr} } .bar { }\`;
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-        const rule0 = root.nodes[0] as Rule;
-        const rule1 = root.nodes[1] as Rule;
+    it('should correct multiple roots', () => {
+      const source = `
+        css\`
+          .foo { color: hotpink; }
+        \`;
 
-        expect(getSourceForNodeByLoc(source, rule0)).to.equal(
-          '.foo { ${expr} }'
-        );
-        expect(getSourceForNodeByRange(source, rule0)).to.equal(
-          '.foo { ${expr} }'
-        );
-        expect(getSourceForNodeByLoc(source, rule1)).to.equal('.bar { }');
-        expect(getSourceForNodeByRange(source, rule1)).to.equal('.bar { }');
+        css\`
+          .bar { color: hotpink; }
+        \`;
+      `;
+      const doc = parse(source);
+      const root0 = doc.nodes[0] as Root;
+      const root1 = doc.nodes[1] as Root;
+
+      expect(root0.source!.start).to.deep.equal({
+        line: 3,
+        column: 9,
+        offset: 22
       });
-
-      it('should handle multiple single-line expr on single-line css', () => {
-        const source = `
-          css\`.foo { height: $\{expr}; width: $\{expr}; } .bar { }\`;
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-        const rule0 = root.nodes[0] as Rule;
-        const rule1 = root.nodes[1] as Rule;
-        const decl0 = rule0.nodes[0] as Declaration;
-        const decl1 = rule0.nodes[1] as Declaration;
-
-        expect(getSourceForNodeByLoc(source, rule0)).to.equal(
-          '.foo { height: ${expr}; width: ${expr}; }'
-        );
-        expect(getSourceForNodeByRange(source, rule0)).to.equal(
-          '.foo { height: ${expr}; width: ${expr}; }'
-        );
-        expect(getSourceForNodeByLoc(source, rule1)).to.equal('.bar { }');
-        expect(getSourceForNodeByRange(source, rule1)).to.equal('.bar { }');
-        expect(getSourceForNodeByLoc(source, decl0)).to.equal(
-          'height: ${expr};'
-        );
-        expect(getSourceForNodeByRange(source, decl0)).to.equal(
-          'height: ${expr};'
-        );
-        expect(getSourceForNodeByLoc(source, decl1)).to.equal(
-          'width: ${expr};'
-        );
-        expect(getSourceForNodeByRange(source, decl1)).to.equal(
-          'width: ${expr};'
-        );
+      expect(root0.source!.end).to.deep.equal(undefined);
+      expect(root1.source!.start).to.deep.equal({
+        line: 7,
+        column: 9,
+        offset: 82
       });
+      expect(root1.source!.end).to.deep.equal(undefined);
+    });
 
-      it('should handle one multi-line expr on multi-line css', () => {
-        const source = `
+    it('should account for prefix offsets', () => {
+      const source = `
+        css\`\t\t
+          .foo { color: hotpink; }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+
+      expect(root.source!.start).to.deep.equal({
+        line: 3,
+        column: 9,
+        offset: 24
+      });
+      expect(root.source!.end).to.deep.equal(undefined);
+    });
+
+    it('should handle lack of prefix offsets', () => {
+      const source = `css\`.foo { color: hotpink; }\`;`;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+
+      expect(root.source!.start).to.deep.equal({
+        line: 1,
+        column: 5,
+        offset: 4
+      });
+      expect(root.source!.end).to.deep.equal(undefined);
+    });
+
+    it('should account for base indentation', () => {
+      const source = `
+        function deeplyIndented() {
           css\`
-            .foo {
-              height: $\{
-                expr
-              };
-            }
-            .bar {
-            }
+            .foo { color: hotpink; }
           \`;
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-        const rule0 = root.nodes[0] as Rule;
-        const rule1 = root.nodes[1] as Rule;
-        const decl0 = rule0.nodes[0] as Declaration;
+        }
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
 
-        expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
-              height: $\{
-                expr
-              };
-            }`);
-        expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
-              height: $\{
-                expr
-              };
-            }`);
-        expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
-            }`);
-        expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
-            }`);
-        expect(getSourceForNodeByLoc(source, decl0)).to.equal(`height: $\{
-                expr
-              };`);
-        expect(getSourceForNodeByRange(source, decl0)).to.equal(`height: $\{
-                expr
-              };`);
+      expect(root.source!.start).to.deep.equal({
+        line: 4,
+        column: 11,
+        offset: 62
       });
+      expect(root.source!.end).to.deep.equal(undefined);
+      expect(getSourceForNodeByLoc(source, rule)).to.equal(
+        '.foo { color: hotpink; }'
+      );
+      expect(getSourceForNodeByRange(source, rule)).to.equal(
+        '.foo { color: hotpink; }'
+      );
+    });
 
-      it('should handle multiple single-line expr on multi-line css', () => {
-        const source = `
-          css\`
-            .foo {
-              height: $\{expr};
-              width: $\{expr};
-            }
-            .bar {
-            }
+    it('should account for inconsistent indentation', () => {
+      const source = `
+        function freakishlyDeindented() {
+      css\`
+        .foo { color: hotpink; }
           \`;
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-        const rule0 = root.nodes[0] as Rule;
-        const rule1 = root.nodes[1] as Rule;
-        const decl0 = rule0.nodes[0] as Declaration;
-        const decl1 = rule0.nodes[1] as Declaration;
+        }
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
 
-        expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
-              height: $\{expr};
-              width: $\{expr};
-            }`);
-        expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
-              height: $\{expr};
-              width: $\{expr};
-            }`);
-        expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
-            }`);
-        expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
-            }`);
-        expect(getSourceForNodeByLoc(source, decl0)).to.equal(
-          'height: ${expr};'
-        );
-        expect(getSourceForNodeByRange(source, decl0)).to.equal(
-          'height: ${expr};'
-        );
-        expect(getSourceForNodeByLoc(source, decl1)).to.equal(
-          'width: ${expr};'
-        );
-        expect(getSourceForNodeByRange(source, decl1)).to.equal(
-          'width: ${expr};'
-        );
+      expect(root.source!.start).to.deep.equal({
+        line: 4,
+        column: 1,
+        offset: 54
       });
+      expect(root.source!.end).to.deep.equal(undefined);
+      expect(getSourceForNodeByLoc(source, rule)).to.equal(
+        '.foo { color: hotpink; }'
+      );
+      expect(getSourceForNodeByRange(source, rule)).to.equal(
+        '.foo { color: hotpink; }'
+      );
+    });
+  });
 
-      it('should handle multiple multi-line expr on multi-line css', () => {
-        const source = `
-          css\`
-            .foo {
-              height: $\{
-                expr
-              };
-              width: $\{
-                expr
-              };
-            }
-            .bar {
-            }
-          \`;
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-        const rule0 = root.nodes[0] as Rule;
-        const rule1 = root.nodes[1] as Rule;
-        const decl0 = rule0.nodes[0] as Declaration;
-        const decl1 = rule0.nodes[1] as Declaration;
+  describe('expressions', () => {
+    it('should handle single-line expr on single-line css', () => {
+      const source = `
+        css\`.foo { $\{expr} } .bar { }\`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const rule1 = root.nodes[1] as Rule;
 
-        expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
-              height: $\{
-                expr
-              };
-              width: $\{
-                expr
-              };
-            }`);
-        expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
-              height: $\{
-                expr
-              };
-              width: $\{
-                expr
-              };
-            }`);
-        expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
-            }`);
-        expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
-            }`);
-        expect(getSourceForNodeByLoc(source, decl0)).to.equal(`height: $\{
-                expr
-              };`);
-        expect(getSourceForNodeByRange(source, decl0)).to.equal(`height: $\{
-                expr
-              };`);
-        expect(getSourceForNodeByLoc(source, decl1)).to.equal(`width: $\{
-                expr
-              };`);
-        expect(getSourceForNodeByRange(source, decl1)).to.equal(`width: $\{
-                expr
-              };`);
-      });
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal('.foo { ${expr} }');
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(
+        '.foo { ${expr} }'
+      );
+      expect(getSourceForNodeByLoc(source, rule1)).to.equal('.bar { }');
+      expect(getSourceForNodeByRange(source, rule1)).to.equal('.bar { }');
+    });
 
-      it('should handle locations after multiple expr, same line', () => {
-        const source = `
-          css\`
-            .foo {
-              $\{expr}: $\{expr}; height: 4rem;
-            }
-          \`;
-        `;
-        const doc = parse(source);
-        const root = doc.nodes[0] as Root;
-        const rule0 = root.nodes[0] as Rule;
-        const decl0 = rule0.nodes[0] as Declaration;
-        const decl1 = rule0.nodes[1] as Declaration;
+    it('should handle multiple single-line expr on single-line css', () => {
+      const source = `
+        css\`.foo { height: $\{expr}; width: $\{expr}; } .bar { }\`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const rule1 = root.nodes[1] as Rule;
+      const decl0 = rule0.nodes[0] as Declaration;
+      const decl1 = rule0.nodes[1] as Declaration;
 
-        expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
-              $\{expr}: $\{expr}; height: 4rem;
-            }`);
-        expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
-              $\{expr}: $\{expr}; height: 4rem;
-            }`);
-        expect(getSourceForNodeByLoc(source, decl0)).to.equal(
-          '${expr}: ${expr};'
-        );
-        expect(getSourceForNodeByRange(source, decl0)).to.equal(
-          '${expr}: ${expr};'
-        );
-        expect(getSourceForNodeByLoc(source, decl1)).to.equal('height: 4rem;');
-        expect(getSourceForNodeByRange(source, decl1)).to.equal(
-          'height: 4rem;'
-        );
-      });
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(
+        '.foo { height: ${expr}; width: ${expr}; }'
+      );
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(
+        '.foo { height: ${expr}; width: ${expr}; }'
+      );
+      expect(getSourceForNodeByLoc(source, rule1)).to.equal('.bar { }');
+      expect(getSourceForNodeByRange(source, rule1)).to.equal('.bar { }');
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal('height: ${expr};');
+      expect(getSourceForNodeByRange(source, decl0)).to.equal(
+        'height: ${expr};'
+      );
+      expect(getSourceForNodeByLoc(source, decl1)).to.equal('width: ${expr};');
+      expect(getSourceForNodeByRange(source, decl1)).to.equal(
+        'width: ${expr};'
+      );
+    });
+
+    it('should handle one multi-line expr on multi-line css', () => {
+      const source = `
+        css\`
+          .foo {
+            height: $\{
+              expr
+            };
+          }
+          .bar {
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const rule1 = root.nodes[1] as Rule;
+      const decl0 = rule0.nodes[0] as Declaration;
+
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+            height: $\{
+              expr
+            };
+          }`);
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+            height: $\{
+              expr
+            };
+          }`);
+      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
+          }`);
+      expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
+          }`);
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal(`height: $\{
+              expr
+            };`);
+      expect(getSourceForNodeByRange(source, decl0)).to.equal(`height: $\{
+              expr
+            };`);
+    });
+
+    it('should handle multiple single-line expr on multi-line css', () => {
+      const source = `
+        css\`
+          .foo {
+            height: $\{expr};
+            width: $\{expr};
+          }
+          .bar {
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const rule1 = root.nodes[1] as Rule;
+      const decl0 = rule0.nodes[0] as Declaration;
+      const decl1 = rule0.nodes[1] as Declaration;
+
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+            height: $\{expr};
+            width: $\{expr};
+          }`);
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+            height: $\{expr};
+            width: $\{expr};
+          }`);
+      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
+          }`);
+      expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
+          }`);
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal('height: ${expr};');
+      expect(getSourceForNodeByRange(source, decl0)).to.equal(
+        'height: ${expr};'
+      );
+      expect(getSourceForNodeByLoc(source, decl1)).to.equal('width: ${expr};');
+      expect(getSourceForNodeByRange(source, decl1)).to.equal(
+        'width: ${expr};'
+      );
+    });
+
+    it('should handle multiple multi-line expr on multi-line css', () => {
+      const source = `
+        css\`
+          .foo {
+            height: $\{
+              expr
+            };
+            width: $\{
+              expr
+            };
+          }
+          .bar {
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const rule1 = root.nodes[1] as Rule;
+      const decl0 = rule0.nodes[0] as Declaration;
+      const decl1 = rule0.nodes[1] as Declaration;
+
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+            height: $\{
+              expr
+            };
+            width: $\{
+              expr
+            };
+          }`);
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+            height: $\{
+              expr
+            };
+            width: $\{
+              expr
+            };
+          }`);
+      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
+          }`);
+      expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
+          }`);
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal(`height: $\{
+              expr
+            };`);
+      expect(getSourceForNodeByRange(source, decl0)).to.equal(`height: $\{
+              expr
+            };`);
+      expect(getSourceForNodeByLoc(source, decl1)).to.equal(`width: $\{
+              expr
+            };`);
+      expect(getSourceForNodeByRange(source, decl1)).to.equal(`width: $\{
+              expr
+            };`);
+    });
+
+    it('should handle locations after multiple expr, same line', () => {
+      const source = `
+        css\`
+          .foo {
+            $\{expr}: $\{expr}; height: 4rem;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const decl0 = rule0.nodes[0] as Declaration;
+      const decl1 = rule0.nodes[1] as Declaration;
+
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+            $\{expr}: $\{expr}; height: 4rem;
+          }`);
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+            $\{expr}: $\{expr}; height: 4rem;
+          }`);
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal(
+        '${expr}: ${expr};'
+      );
+      expect(getSourceForNodeByRange(source, decl0)).to.equal(
+        '${expr}: ${expr};'
+      );
+      expect(getSourceForNodeByLoc(source, decl1)).to.equal('height: 4rem;');
+      expect(getSourceForNodeByRange(source, decl1)).to.equal('height: 4rem;');
+    });
+  });
+
+  describe('expression positions', () => {
+    it('should handle block positions', () => {
+      const source = `
+        css\`
+          .foo {
+          }
+
+          $\{expr}
+
+          .bar {
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const comment0 = root.nodes[1] as Comment;
+      const rule1 = root.nodes[2] as Rule;
+
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+          }`);
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+          }`);
+      expect(getSourceForNodeByLoc(source, comment0)).to.equal('${expr}');
+      expect(getSourceForNodeByRange(source, comment0)).to.equal('${expr}');
+      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
+          }`);
+      expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
+          }`);
+    });
+
+    it('should handle statement positions', () => {
+      const source = `
+        css\`
+          .foo {
+            color: hotpink;
+
+            $\{expr}
+
+            color: blue;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const decl0 = rule0.nodes[0] as Declaration;
+      const decl2 = rule0.nodes[2] as Declaration;
+
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+            color: hotpink;
+
+            $\{expr}
+
+            color: blue;
+          }`);
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+            color: hotpink;
+
+            $\{expr}
+
+            color: blue;
+          }`);
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal('color: hotpink;');
+      expect(getSourceForNodeByRange(source, decl0)).to.equal(
+        'color: hotpink;'
+      );
+      expect(getSourceForNodeByLoc(source, decl2)).to.equal('color: blue;');
+      expect(getSourceForNodeByRange(source, decl2)).to.equal('color: blue;');
+    });
+
+    it('should handle selector positions', () => {
+      const source = `
+        css\`
+          .foo {
+            color: hotpink;
+          }
+
+          $\{expr} {
+            color: blue;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule1 = root.nodes[1] as Rule;
+      const decl0 = rule1.nodes[0] as Declaration;
+
+      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`$\{expr} {
+            color: blue;
+          }`);
+      expect(getSourceForNodeByRange(source, rule1)).to.equal(`$\{expr} {
+            color: blue;
+          }`);
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal('color: blue;');
+      expect(getSourceForNodeByRange(source, decl0)).to.equal('color: blue;');
+    });
+
+    it('should handle property positions', () => {
+      const source = `
+        css\`
+          .foo {
+            $\{expr}: 2px;
+            color: hotpink;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const decl0 = rule0.nodes[0] as Declaration;
+      const decl1 = rule0.nodes[1] as Declaration;
+
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+            $\{expr}: 2px;
+            color: hotpink;
+          }`);
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+            $\{expr}: 2px;
+            color: hotpink;
+          }`);
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal('${expr}: 2px;');
+      expect(getSourceForNodeByRange(source, decl0)).to.equal('${expr}: 2px;');
+      expect(getSourceForNodeByLoc(source, decl1)).to.equal('color: hotpink;');
+      expect(getSourceForNodeByRange(source, decl1)).to.equal(
+        'color: hotpink;'
+      );
+    });
+
+    it('should handle comment positions', () => {
+      const source = `
+        css\`
+          .foo {
+            /* comment $\{expr} */
+            color: hotpink;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule0 = root.nodes[0] as Rule;
+      const comment0 = rule0.nodes[0] as Comment;
+      const decl0 = rule0.nodes[1] as Declaration;
+
+      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+            /* comment $\{expr} */
+            color: hotpink;
+          }`);
+      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+            /* comment $\{expr} */
+            color: hotpink;
+          }`);
+      expect(getSourceForNodeByLoc(source, comment0)).to.equal(
+        '/* comment ${expr} */'
+      );
+      expect(getSourceForNodeByRange(source, comment0)).to.equal(
+        '/* comment ${expr} */'
+      );
+      expect(getSourceForNodeByLoc(source, decl0)).to.equal('color: hotpink;');
+      expect(getSourceForNodeByRange(source, decl0)).to.equal(
+        'color: hotpink;'
+      );
     });
   });
 });
