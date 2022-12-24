@@ -30,7 +30,7 @@ export function computeNormalisedSource(
   const baseIndentation = (node.quasi.loc?.end.column ?? 1) - 1;
   const sourceLines = source.split('\n');
   const indentationPattern = new RegExp(`^[ \\t]{${baseIndentation}}`);
-  const emptyLinePattern = /^[ \\t\r]*$/;
+  const emptyLinePattern = /^[ \t\r]*$/;
   const deindentedLines: string[] = [];
 
   if (

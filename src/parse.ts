@@ -23,7 +23,7 @@ export type PostcssParseOptions = Pick<ProcessOptions, 'map' | 'from'>;
  * @param {PostcssParseOptions=} postcssOptions PostCSS parse options
  * @return {Root}
  */
-export function parseStyles(
+function parseStyles(
   source: string,
   options: SyntaxOptions,
   postcssOptions?: PostcssParseOptions
