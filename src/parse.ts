@@ -3,7 +3,9 @@ import {
   Root,
   Document,
   Input,
-  CssSyntaxError
+  CssSyntaxError,
+  Parser,
+  ProcessOptions
 } from 'postcss';
 import {locationCorrectionWalker} from './locationCorrection.js';
 import {extractTemplatesFromSource} from './extract.js';
@@ -12,22 +14,22 @@ import {computeNormalisedSource} from './normalise.js';
 import {SyntaxOptions, ExtractedStylesheet} from './types.js';
 import {createPlaceholder} from './placeholders.js';
 
+export type PostcssParseOptions = Pick<ProcessOptions, 'map' | 'from'>;
+
 /**
  * Parses the styles from a JS/TS source
  * @param {string} source Source to parse
  * @param {SyntaxOptions} options Parsing options
+ * @param {PostcssParseOptions=} postcssOptions PostCSS parse options
  * @return {Root}
  */
 export function parseStyles(
   source: string,
-  options: SyntaxOptions
+  options: SyntaxOptions,
+  postcssOptions?: PostcssParseOptions
 ): Document {
-  const extractedStyles = extractTemplatesFromSource(
-    source,
-    options
-  );
-  const computePlaceholder =
-    options.placeholder ?? createPlaceholder;
+  const extractedStyles = extractTemplatesFromSource(source, options);
+  const computePlaceholder = options.placeholder ?? createPlaceholder;
 
   const doc = new Document();
   let currentOffset = 0;
@@ -61,7 +63,7 @@ export function parseStyles(
 
     try {
       root = parseCSS(extractedStylesheet.source, {
-        ...options?.postcssOptions,
+        ...postcssOptions,
         map: false
       }) as Root;
     } catch (err) {
@@ -118,7 +120,7 @@ export function parseStyles(
   }
 
   doc.source = {
-    input: new Input(source, options?.postcssOptions),
+    input: new Input(source, postcssOptions),
     start: {
       line: 1,
       column: 1,
@@ -127,4 +129,20 @@ export function parseStyles(
   };
 
   return doc;
+}
+
+/**
+ * Creates a css-in-js parser
+ * @param {ParseOptions} options Syntax options
+ * @return {Parser<Root | Document>}
+ */
+export function createParser(options: SyntaxOptions): Parser<Root | Document> {
+  return (
+    source: string | {toString(): string},
+    postcssOptions?: PostcssParseOptions
+  ): Root | Document => {
+    const sourceAsString = source.toString();
+
+    return parseStyles(sourceAsString, options, postcssOptions);
+  };
 }

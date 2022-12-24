@@ -10,15 +10,13 @@ type Position =
 
 const whitespacePattern = /\s/;
 
-const defaultPlaceholder: PlaceholderFunc =
-  (key) => `POSTCSS_LIT_${key}`;
+const defaultPlaceholder: PlaceholderFunc = (key) => `POSTCSS_LIT_${key}`;
 
-const placeholderMapping: Partial<Record<Position, PlaceholderFunc>> =
-  {
-    block: (key) => `/* POSTCSS_LIT_${key} */`,
-    statement: (key) => `/* POSTCSS_LIT_${key} */`,
-    property: (key) => `--POSTCSS_LIT_${key}`
-  };
+const placeholderMapping: Partial<Record<Position, PlaceholderFunc>> = {
+  block: (key) => `/* POSTCSS_LIT_${key} */`,
+  statement: (key) => `/* POSTCSS_LIT_${key} */`,
+  property: (key) => `--POSTCSS_LIT_${key}`
+};
 
 /**
  * Finds the first non-space character of a string

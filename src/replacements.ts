@@ -33,10 +33,7 @@ export function computeReplacedSource(
       result.result += template.value.raw;
 
       if (expr && nextTemplate && nextTemplate.range && template.range) {
-        const exprText = source.slice(
-          template.range[1],
-          nextTemplate.range[0]
-        );
+        const exprText = source.slice(template.range[1], nextTemplate.range[0]);
         const placeholder = computePlaceholder(
           i,
           result.result,

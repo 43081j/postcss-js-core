@@ -146,11 +146,7 @@ function computeBeforeAfter(
   }
 
   if (node.type === 'rule' && node.selector.includes('\n')) {
-    const rawValue = computeCorrectedRawValue(
-      node,
-      'selector',
-      state
-    );
+    const rawValue = computeCorrectedRawValue(node, 'selector', state);
 
     if (rawValue !== null) {
       node.raws[`${options.stateKey}:selector`] = rawValue;
@@ -205,8 +201,7 @@ function computeCorrectedString(
     const line = lines[i];
     if (line !== undefined) {
       const currentLineNumber = lineNumber + i;
-      const baseIndentation =
-        state?.indentationMap?.get(currentLineNumber);
+      const baseIndentation = state?.indentationMap?.get(currentLineNumber);
 
       if (baseIndentation !== undefined) {
         rawLines.push(' '.repeat(baseIndentation) + line);
@@ -237,11 +232,7 @@ function computeCorrectedRawValue<T extends AnyNode>(
     return null;
   }
 
-  return computeCorrectedString(
-    value,
-    node.source.start.line,
-    state
-  );
+  return computeCorrectedString(value, node.source.start.line, state);
 }
 
 /**
@@ -258,24 +249,17 @@ export function locationCorrectionWalker(
 ): (node: Document | Root | ChildNode) => void {
   return (node: Document | Root | ChildNode): void => {
     const root = node.root();
-    const state =
-      root.raws[options.stateKey] as ExtractedStylesheet|undefined;
+    const state = root.raws[options.stateKey] as
+      | ExtractedStylesheet
+      | undefined;
 
     computeBeforeAfter(node, options, state);
 
     if (node.source?.start) {
-      node.source.start = correctLocation(
-        expr,
-        node.source.start,
-        state
-      );
+      node.source.start = correctLocation(expr, node.source.start, state);
     }
     if (node.source?.end) {
-      node.source.end = correctLocation(
-        expr,
-        node.source.end,
-        state
-      );
+      node.source.end = correctLocation(expr, node.source.end, state);
     }
   };
 }

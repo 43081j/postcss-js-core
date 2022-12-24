@@ -34,19 +34,14 @@ class JavaScriptStringifier extends Stringifier {
       if (!node || node?.type === 'root') {
         builder(str, node, type);
       } else {
-        const state =
-          node?.root()?.raws[
-            this._parseOptions.stateKey
-          ] as ExtractedStylesheet|undefined;
+        const state = node?.root()?.raws[this._parseOptions.stateKey] as
+          | ExtractedStylesheet
+          | undefined;
         if (state) {
-          let processedString =
-            str.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
+          let processedString = str.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
 
           for (const {source, replacement} of state.replacements) {
-            processedString = processedString.replace(
-              replacement,
-              source
-            );
+            processedString = processedString.replace(replacement, source);
           }
 
           builder(processedString, node, type);
@@ -122,9 +117,7 @@ class JavaScriptStringifier extends Stringifier {
  * @param {SyntaxOptions} options Syntax options
  * @return {StringifyFn}
  */
-export function createStringifier(
-  options: SyntaxOptions
-): StringifierFn {
+export function createStringifier(options: SyntaxOptions): StringifierFn {
   return (node: AnyNode, builder: Builder): void => {
     const str = new JavaScriptStringifier(builder, options);
     str.stringify(node);
