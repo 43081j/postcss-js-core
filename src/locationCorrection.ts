@@ -108,7 +108,7 @@ function computeBeforeAfter(
       node.source.start.line - numBeforeLines,
       state
     );
-    node.raws[`${options.stateKey}:before`] = corrected;
+    node.raws[`${options.id}:before`] = corrected;
   }
 
   if (
@@ -127,7 +127,7 @@ function computeBeforeAfter(
         line - numAfterLines,
         state
       );
-      node.raws[`${options.stateKey}:after`] = corrected;
+      node.raws[`${options.id}:after`] = corrected;
     }
   }
 
@@ -142,14 +142,14 @@ function computeBeforeAfter(
       state
     );
 
-    node.raws[`${options.stateKey}:between`] = corrected;
+    node.raws[`${options.id}:between`] = corrected;
   }
 
   if (node.type === 'rule' && node.selector.includes('\n')) {
     const rawValue = computeCorrectedRawValue(node, 'selector', state);
 
     if (rawValue !== null) {
-      node.raws[`${options.stateKey}:selector`] = rawValue;
+      node.raws[`${options.id}:selector`] = rawValue;
     }
   }
 
@@ -157,7 +157,7 @@ function computeBeforeAfter(
     const rawValue = computeCorrectedRawValue(node, 'value', state);
 
     if (rawValue !== null) {
-      node.raws[`${options.stateKey}:value`] = rawValue;
+      node.raws[`${options.id}:value`] = rawValue;
     }
   }
 
@@ -165,7 +165,7 @@ function computeBeforeAfter(
     const rawValue = computeCorrectedRawValue(node, 'params', state);
 
     if (rawValue !== null) {
-      node.raws[`${options.stateKey}:params`] = rawValue;
+      node.raws[`${options.id}:params`] = rawValue;
     }
   }
 }
@@ -249,9 +249,7 @@ export function locationCorrectionWalker(
 ): (node: Document | Root | ChildNode) => void {
   return (node: Document | Root | ChildNode): void => {
     const root = node.root();
-    const state = root.raws[options.stateKey] as
-      | ExtractedStylesheet
-      | undefined;
+    const state = root.raws[options.id] as ExtractedStylesheet | undefined;
 
     computeBeforeAfter(node, options, state);
 

@@ -34,5 +34,13 @@
     "@typescript-eslint/no-empty-interface": "error",
     "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-parameter-properties": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*_test.ts"],
+      "rules": {
+        "@typescript-eslint/no-non-null-assertion": "off"
+      }
+    }
+  ]
 }

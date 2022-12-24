@@ -7,7 +7,7 @@ export type PlaceholderFunc = (
 ) => string;
 
 export interface SyntaxOptions {
-  stateKey: string;
+  id: string;
   tagNames?: string[];
   babelOptions?: BabelParserOptions;
   placeholder?: PlaceholderFunc;

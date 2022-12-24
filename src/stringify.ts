@@ -34,7 +34,7 @@ class JavaScriptStringifier extends Stringifier {
       if (!node || node?.type === 'root') {
         builder(str, node, type);
       } else {
-        const state = node?.root()?.raws[this._parseOptions.stateKey] as
+        const state = node?.root()?.raws[this._parseOptions.id] as
           | ExtractedStylesheet
           | undefined;
         if (state) {
@@ -71,7 +71,7 @@ class JavaScriptStringifier extends Stringifier {
 
     // Here we want to recover any previously removed JS indentation
     // if possible. Otherwise, we use the `after` string as-is.
-    const afterKey = `${this._parseOptions.stateKey}:after`;
+    const afterKey = `${this._parseOptions.id}:after`;
     const after = node.raws[afterKey] ?? node.raws.after;
     if (after) {
       this.builder(after);
@@ -86,9 +86,9 @@ class JavaScriptStringifier extends Stringifier {
     own: string,
     detect: string | undefined
   ): string {
-    const beforeKey = `${this._parseOptions.stateKey}:before`;
-    const afterKey = `${this._parseOptions.stateKey}:after`;
-    const betweenKey = `${this._parseOptions.stateKey}:between`;
+    const beforeKey = `${this._parseOptions.id}:before`;
+    const afterKey = `${this._parseOptions.id}:after`;
+    const betweenKey = `${this._parseOptions.id}:between`;
     if (own === 'before' && node.raws['before'] && node.raws[beforeKey]) {
       return node.raws[beforeKey];
     }
@@ -103,7 +103,7 @@ class JavaScriptStringifier extends Stringifier {
 
   /** @inheritdoc */
   public override rawValue(node: AnyNode, prop: string): string {
-    const rawKey = `${this._parseOptions.stateKey}:${prop}`;
+    const rawKey = `${this._parseOptions.id}:${prop}`;
     if (Object.prototype.hasOwnProperty.call(node.raws, rawKey)) {
       return `${node.raws[rawKey]}`;
     }

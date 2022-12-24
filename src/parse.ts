@@ -84,7 +84,7 @@ export function parseStyles(
       continue;
     }
 
-    root.raws[options.stateKey] = extractedStylesheet;
+    root.raws[options.id] = extractedStylesheet;
 
     // TODO (43081j): remove this if stylelint/stylelint#5767 ever gets fixed,
     // or they drop the indentation rule. Their indentation rule depends on

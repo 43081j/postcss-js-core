@@ -40,7 +40,7 @@ export function extractTemplatesFromSource(
       if (
         path.node.tag.type === 'Identifier' &&
         tagNames.includes(path.node.tag.name) &&
-        !hasDisableComment(path)
+        !hasDisableComment(path, options)
       ) {
         extractedStyles.add(path.node);
       }
