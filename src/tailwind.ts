@@ -2,30 +2,45 @@ import {parse} from '@babel/parser';
 import {default as traverse, NodePath} from '@babel/traverse';
 import {TaggedTemplateExpression} from '@babel/types';
 import {default as generate} from '@babel/generator';
+import {SyntaxOptions} from './types.js';
 
 /**
- * Extracts the HTML templates from a given JS source code string.
- * @param {string} content JS source code
- * @return {string}
+ * Creates a transform which extracts the HTML templates from a given
+ * JS source code string.
+ * @param {SyntaxOptions} options Syntax options
+ * @return {Function}
  */
-export function tailwindTransform(content: string): string {
-  const ast = parse(content, {
-    sourceType: 'unambiguous',
-    plugins: ['typescript', ['decorators', {decoratorsBeforeExport: true}]],
-    ranges: true
-  });
+export function createTailwindTransform(
+  options: SyntaxOptions
+): (content: string) => string {
+  return (content: string): string => {
+    const tagNames = options.tagNames;
 
-  traverse(ast, {
-    TaggedTemplateExpression: (
-      path: NodePath<TaggedTemplateExpression>
-    ): void => {
-      if (path.node.tag.type === 'Identifier' && path.node.tag.name === 'css') {
-        path.remove();
-      }
+    if (!tagNames || tagNames.length === 0) {
+      return content;
     }
-  });
 
-  const {code} = generate(ast);
+    const ast = parse(content, {
+      sourceType: 'unambiguous',
+      plugins: ['typescript', ['decorators', {decoratorsBeforeExport: true}]],
+      ranges: true
+    });
 
-  return code;
+    traverse(ast, {
+      TaggedTemplateExpression: (
+        path: NodePath<TaggedTemplateExpression>
+      ): void => {
+        if (
+          path.node.tag.type === 'Identifier' &&
+          tagNames.includes(path.node.tag.name)
+        ) {
+          path.remove();
+        }
+      }
+    });
+
+    const {code} = generate(ast);
+
+    return code;
+  };
 }
