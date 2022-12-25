@@ -1,5 +1,13 @@
 import {expect} from 'chai';
-import {Root, Document, Parser, Declaration, Rule, Comment} from 'postcss';
+import {
+  Root,
+  Document,
+  Parser,
+  Declaration,
+  Rule,
+  Comment,
+  AtRule
+} from 'postcss';
 import {createParser} from '../parse.js';
 import {getSourceForNodeByLoc, getSourceForNodeByRange} from './util.js';
 
@@ -519,6 +527,178 @@ describe('locationCorrection', () => {
       expect(getSourceForNodeByRange(source, decl0)).to.equal(
         'color: hotpink;'
       );
+    });
+  });
+
+  describe('raws', () => {
+    it('should compute corrected before', () => {
+      const source = `
+        css\`
+          .foo {
+            color: hotpink;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
+      const decl = rule.nodes[0] as Declaration;
+
+      expect(rule.raws['foo:before']).to.equal('          ');
+      expect(decl.raws['foo:before']).to.equal('\n            ');
+    });
+
+    it('should compute corrected after', () => {
+      const source = `
+        css\`
+          .foo {
+            color: hotpink;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
+      const decl = rule.nodes[0] as Declaration;
+
+      expect(root.raws['foo:after']).to.equal('\n        ');
+      expect(rule.raws['foo:after']).to.equal('\n          ');
+      expect(decl.raws['foo:after']).to.equal(undefined);
+    });
+
+    it('should compute corrected between with newlines', () => {
+      const source = `
+        css\`
+          .foo {
+            color:
+              hotpink;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
+      const decl = rule.nodes[0] as Declaration;
+
+      expect(decl.raws['foo:between']).to.equal(':\n              ');
+    });
+
+    it('should not compute corrected between if no newlines', () => {
+      const source = `
+        css\`
+          .foo {
+            color: hotpink;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
+      const decl = rule.nodes[0] as Declaration;
+
+      expect(decl.raws['foo:between']).to.equal(undefined);
+    });
+
+    it('should compute corrected selector', () => {
+      const source = `
+        css\`
+          .foo,
+          .bar {
+            color: hotpink;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
+
+      expect(rule.raws['foo:selector']).to.equal('.foo,\n          .bar');
+    });
+
+    it('should not compute corrected selector if no newlines', () => {
+      const source = `
+        css\`
+          .foo, .bar {
+            color: hotpink;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
+
+      expect(rule.raws['foo:selector']).to.equal(undefined);
+    });
+
+    it('should compute corrected declaration values', () => {
+      const source = `
+        css\`
+          .foo {
+            padding: 2px
+              2px;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
+      const decl = rule.nodes[0] as Declaration;
+
+      expect(decl.raws['foo:value']).to.equal('2px\n              2px');
+    });
+
+    it('should not compute corrected values if no newlines', () => {
+      const source = `
+        css\`
+          .foo {
+            padding: 2px 2px;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as Rule;
+      const decl = rule.nodes[0] as Declaration;
+
+      expect(decl.raws['foo:value']).to.equal(undefined);
+    });
+
+    it('should compute corrected at-rule params', () => {
+      const source = `
+        css\`
+          @foo (
+            a:5 and b:6
+          ) {
+            .foo {
+              color: hotpink;
+            }
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as AtRule;
+
+      expect(rule.raws['foo:params']).to.equal(
+        '(\n            a:5 and b:6\n          )'
+      );
+    });
+
+    it('should not compute corrected at-rule params if no newlines', () => {
+      const source = `
+        css\`
+          @foo (a:5 and b:6) {
+            .foo {
+              color: hotpink;
+            }
+          }
+        \`;
+      `;
+      const doc = parse(source);
+      const root = doc.nodes[0] as Root;
+      const rule = root.nodes[0] as AtRule;
+
+      expect(rule.raws['foo:params']).to.equal(undefined);
     });
   });
 });
