@@ -24,6 +24,21 @@ describe('extract', () => {
       assert.equal(result.size, 2);
     });
 
+    it('should detect wildcard tags', () => {
+      const source = `
+        css.one\`.foo {}\`;
+        css.two\`.bar {}\`;
+        nonsense\`.baz {}\`;
+        css\`.bleh {}\`;
+        const x = 5;
+      `;
+      const result = extractTemplatesFromSource(source, {
+        id: 'foo',
+        tagNames: ['css.*']
+      });
+      assert.equal(result.size, 2);
+    });
+
     it('should parse typescript', () => {
       const source = `
         const x: number = 5;

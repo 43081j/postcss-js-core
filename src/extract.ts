@@ -5,6 +5,29 @@ import {SyntaxOptions} from './types.js';
 import {hasDisableComment} from './comments.js';
 
 /**
+ * Determines if a given tag is one of the supported tags
+ * @param {string} tag Tag to test
+ * @param {string[]} supported Supported tags
+ * @return {boolean}
+ */
+function isSupportedTag(tag: string, supported: string[]): boolean {
+  for (const supportedTag of supported) {
+    if (supportedTag === tag) {
+      return true;
+    }
+
+    if (
+      supportedTag.endsWith('*') &&
+      tag.startsWith(supportedTag.slice(0, -1))
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Extracts stylesheets from a given source string
  * @param {string} source Source to parse
  * @param {SyntaxOptions} options Extraction options
@@ -40,7 +63,10 @@ export function extractTemplatesFromSource(
       if (path.node.tag.start !== null && path.node.tag.end !== null) {
         const tag = source.slice(path.node.tag.start, path.node.tag.end);
 
-        if (tagNames.includes(tag) && !hasDisableComment(path, options)) {
+        if (
+          isSupportedTag(tag, tagNames) &&
+          !hasDisableComment(path, options)
+        ) {
           extractedStyles.add(path.node);
         }
       }
