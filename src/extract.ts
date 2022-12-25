@@ -37,12 +37,12 @@ export function extractTemplatesFromSource(
     TaggedTemplateExpression: (
       path: NodePath<TaggedTemplateExpression>
     ): void => {
-      if (
-        path.node.tag.type === 'Identifier' &&
-        tagNames.includes(path.node.tag.name) &&
-        !hasDisableComment(path, options)
-      ) {
-        extractedStyles.add(path.node);
+      if (path.node.tag.start !== null && path.node.tag.end !== null) {
+        const tag = source.slice(path.node.tag.start, path.node.tag.end);
+
+        if (tagNames.includes(tag) && !hasDisableComment(path, options)) {
+          extractedStyles.add(path.node);
+        }
       }
     }
   });
