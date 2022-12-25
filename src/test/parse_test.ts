@@ -1,6 +1,6 @@
 import * as hanbi from 'hanbi';
 import {createParser} from '../parse.js';
-import {expect} from 'chai';
+import {assert} from 'chai';
 import {ExtractedStylesheet} from '../types.js';
 import {Root, Document, Declaration} from 'postcss';
 
@@ -13,7 +13,7 @@ describe('parse', () => {
     it('should be an empty doc if no templates', () => {
       const parse = createParser({id: 'foo', tagNames: ['css']});
       const doc = parse('const x = 5;');
-      expect(doc.nodes.length).to.equal(0);
+      assert.equal(doc.nodes.length, 0);
     });
 
     it('should skip and log invalid templates', () => {
@@ -21,8 +21,8 @@ describe('parse', () => {
       const parse = createParser({id: 'foo', tagNames: ['css']});
       const doc = parse('css`.foo {`;');
 
-      expect(doc.nodes.length).to.equal(0);
-      expect(stub.called).to.equal(true);
+      assert.equal(doc.nodes.length, 0);
+      assert.equal(stub.called, true);
     });
 
     it('should populate raws', () => {
@@ -37,25 +37,29 @@ describe('parse', () => {
       const doc = parse(source);
       const root = doc.nodes[0]!;
       const state = root.raws['foo'] as ExtractedStylesheet;
-      expect(state.replacements.length).to.equal(0);
-      expect(state.source).to.equal('  .foo { color: hotpink; }\n');
-      expect(state.prefixOffsets).to.deep.equal({
+      assert.equal(state.replacements.length, 0);
+      assert.equal(state.source, '  .foo { color: hotpink; }\n');
+      assert.deepEqual(state.prefixOffsets, {
         lines: 1,
         offset: 1
       });
-      expect([...state.indentationMap]).to.deep.equal([
-        [1, 8],
-        [2, 8],
-        [-1, 8]
-      ]);
-      expect(root.raws.codeBefore).to.equal(
+      assert.deepEqual(
+        [...state.indentationMap],
+        [
+          [1, 8],
+          [2, 8],
+          [-1, 8]
+        ]
+      );
+      assert.equal(
+        root.raws.codeBefore,
         '\n        const x = 5;\n\n        css`\n'
       );
-      expect(root.raws.codeAfter).to.equal('`;\n      ');
-      expect(root.raws['beforeStart']).to.equal('');
-      expect(root.parent).to.equal(doc);
-      expect((root as Root & {document: Document}).document).to.equal(doc);
-      expect(doc.source!.start).to.deep.equal({
+      assert.equal(root.raws.codeAfter, '`;\n      ');
+      assert.equal(root.raws['beforeStart'], '');
+      assert.equal(root.parent, doc);
+      assert.equal((root as Root & {document: Document}).document, doc);
+      assert.deepEqual(doc.source!.start, {
         line: 1,
         column: 1,
         offset: 0
@@ -76,8 +80,8 @@ describe('parse', () => {
       const doc = parse(source);
       const root0 = doc.nodes[0]!;
       const root1 = doc.nodes[1]!;
-      expect(root0.raws.codeAfter).to.equal(undefined);
-      expect(root1.raws.codeAfter).to.equal('`;\n      ');
+      assert.equal(root0.raws.codeAfter, undefined);
+      assert.equal(root1.raws.codeAfter, '`;\n      ');
     });
 
     it('should parse basic stylesheet', () => {
@@ -93,13 +97,13 @@ describe('parse', () => {
       `;
       const doc = parse(source);
 
-      expect(doc.nodes.length).to.equal(2);
+      assert.equal(doc.nodes.length, 2);
 
       const root0 = doc.nodes[0] as Root;
       const root1 = doc.nodes[1] as Root;
 
-      expect(root0.nodes.length).to.equal(1);
-      expect(root1.nodes.length).to.equal(1);
+      assert.equal(root0.nodes.length, 1);
+      assert.equal(root1.nodes.length, 1);
     });
 
     it('should populate locations', () => {
@@ -114,17 +118,17 @@ describe('parse', () => {
       const doc = parse(source);
       const root = doc.nodes[0] as Root;
       const decl = root.nodes[0] as Declaration;
-      expect(root.source!.start).to.deep.equal({
+      assert.deepEqual(root.source!.start, {
         offset: 22,
         column: 9,
         line: 3
       });
-      expect(decl.source!.start).to.deep.equal({
+      assert.deepEqual(decl.source!.start, {
         offset: 24,
         column: 11,
         line: 3
       });
-      expect(decl.source!.end).to.deep.equal({
+      assert.deepEqual(decl.source!.end, {
         offset: 69,
         column: 11,
         line: 5
@@ -140,7 +144,7 @@ describe('parse', () => {
       `;
       const doc = parse(source);
 
-      expect(doc.toString()).to.equal('  .foo { /* POSTCSS_foo_0 */ }\n');
+      assert.equal(doc.toString(), '  .foo { /* POSTCSS_foo_0 */ }\n');
     });
   });
 });

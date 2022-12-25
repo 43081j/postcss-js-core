@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import {assert} from 'chai';
 import {isDisableComment, hasDisableComment} from '../comments.js';
 import {SyntaxOptions} from '../types.js';
 import {parseScript} from './util.js';
@@ -19,7 +19,7 @@ describe('comments', () => {
 
       const comment = ast.comments![0]!;
 
-      expect(isDisableComment(comment, opts)).to.equal(true);
+      assert.equal(isDisableComment(comment, opts), true);
     });
 
     it('should be false for unrelated comments', () => {
@@ -30,7 +30,7 @@ describe('comments', () => {
 
       const comment = ast.comments![0]!;
 
-      expect(isDisableComment(comment, opts)).to.equal(false);
+      assert.equal(isDisableComment(comment, opts), false);
     });
   });
 
@@ -49,7 +49,7 @@ describe('comments', () => {
         }
       });
 
-      expect(hasDisableComment(path!, opts)).to.equal(true);
+      assert.equal(hasDisableComment(path!, opts), true);
     });
 
     it('should be true in nested places', () => {
@@ -66,8 +66,11 @@ describe('comments', () => {
         }
       });
 
-      expect(paths.length).to.equal(2);
-      expect(paths.every((p) => hasDisableComment(p, opts))).to.equal(true);
+      assert.equal(paths.length, 2);
+      assert.equal(
+        paths.every((p) => hasDisableComment(p, opts)),
+        true
+      );
     });
 
     it('should be false if no comments', () => {
@@ -83,8 +86,11 @@ describe('comments', () => {
         }
       });
 
-      expect(paths.length).to.equal(1);
-      expect(paths.every((p) => hasDisableComment(p, opts))).to.equal(false);
+      assert.equal(paths.length, 1);
+      assert.equal(
+        paths.every((p) => hasDisableComment(p, opts)),
+        false
+      );
     });
 
     it('should be false if unrelated comments', () => {
@@ -101,8 +107,11 @@ describe('comments', () => {
         }
       });
 
-      expect(paths.length).to.equal(1);
-      expect(paths.every((p) => hasDisableComment(p, opts))).to.equal(false);
+      assert.equal(paths.length, 1);
+      assert.equal(
+        paths.every((p) => hasDisableComment(p, opts)),
+        false
+      );
     });
   });
 });

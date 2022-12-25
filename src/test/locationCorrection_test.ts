@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import {assert} from 'chai';
 import {
   Root,
   Document,
@@ -32,12 +32,12 @@ describe('locationCorrection', () => {
       const doc = parse(source);
       const root = doc.nodes[0] as Root;
 
-      expect(root.source!.start).to.deep.equal({
+      assert.deepEqual(root.source!.start, {
         line: 3,
         column: 9,
         offset: 22
       });
-      expect(root.source!.end).to.deep.equal(undefined);
+      assert.equal(root.source!.end, undefined);
     });
 
     it('should correct multiple roots', () => {
@@ -54,18 +54,18 @@ describe('locationCorrection', () => {
       const root0 = doc.nodes[0] as Root;
       const root1 = doc.nodes[1] as Root;
 
-      expect(root0.source!.start).to.deep.equal({
+      assert.deepEqual(root0.source!.start, {
         line: 3,
         column: 9,
         offset: 22
       });
-      expect(root0.source!.end).to.deep.equal(undefined);
-      expect(root1.source!.start).to.deep.equal({
+      assert.equal(root0.source!.end, undefined);
+      assert.deepEqual(root1.source!.start, {
         line: 7,
         column: 9,
         offset: 82
       });
-      expect(root1.source!.end).to.deep.equal(undefined);
+      assert.equal(root1.source!.end, undefined);
     });
 
     it('should account for prefix offsets', () => {
@@ -77,12 +77,12 @@ describe('locationCorrection', () => {
       const doc = parse(source);
       const root = doc.nodes[0] as Root;
 
-      expect(root.source!.start).to.deep.equal({
+      assert.deepEqual(root.source!.start, {
         line: 3,
         column: 9,
         offset: 24
       });
-      expect(root.source!.end).to.deep.equal(undefined);
+      assert.equal(root.source!.end, undefined);
     });
 
     it('should handle lack of prefix offsets', () => {
@@ -90,12 +90,12 @@ describe('locationCorrection', () => {
       const doc = parse(source);
       const root = doc.nodes[0] as Root;
 
-      expect(root.source!.start).to.deep.equal({
+      assert.deepEqual(root.source!.start, {
         line: 1,
         column: 5,
         offset: 4
       });
-      expect(root.source!.end).to.deep.equal(undefined);
+      assert.equal(root.source!.end, undefined);
     });
 
     it('should account for base indentation', () => {
@@ -110,16 +110,18 @@ describe('locationCorrection', () => {
       const root = doc.nodes[0] as Root;
       const rule = root.nodes[0] as Rule;
 
-      expect(root.source!.start).to.deep.equal({
+      assert.deepEqual(root.source!.start, {
         line: 4,
         column: 11,
         offset: 62
       });
-      expect(root.source!.end).to.deep.equal(undefined);
-      expect(getSourceForNodeByLoc(source, rule)).to.equal(
+      assert.equal(root.source!.end, undefined);
+      assert.equal(
+        getSourceForNodeByLoc(source, rule),
         '.foo { color: hotpink; }'
       );
-      expect(getSourceForNodeByRange(source, rule)).to.equal(
+      assert.equal(
+        getSourceForNodeByRange(source, rule),
         '.foo { color: hotpink; }'
       );
     });
@@ -136,16 +138,18 @@ describe('locationCorrection', () => {
       const root = doc.nodes[0] as Root;
       const rule = root.nodes[0] as Rule;
 
-      expect(root.source!.start).to.deep.equal({
+      assert.deepEqual(root.source!.start, {
         line: 4,
         column: 1,
         offset: 54
       });
-      expect(root.source!.end).to.deep.equal(undefined);
-      expect(getSourceForNodeByLoc(source, rule)).to.equal(
+      assert.equal(root.source!.end, undefined);
+      assert.equal(
+        getSourceForNodeByLoc(source, rule),
         '.foo { color: hotpink; }'
       );
-      expect(getSourceForNodeByRange(source, rule)).to.equal(
+      assert.equal(
+        getSourceForNodeByRange(source, rule),
         '.foo { color: hotpink; }'
       );
     });
@@ -161,12 +165,10 @@ describe('locationCorrection', () => {
       const rule0 = root.nodes[0] as Rule;
       const rule1 = root.nodes[1] as Rule;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal('.foo { ${expr} }');
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(
-        '.foo { ${expr} }'
-      );
-      expect(getSourceForNodeByLoc(source, rule1)).to.equal('.bar { }');
-      expect(getSourceForNodeByRange(source, rule1)).to.equal('.bar { }');
+      assert.equal(getSourceForNodeByLoc(source, rule0), '.foo { ${expr} }');
+      assert.equal(getSourceForNodeByRange(source, rule0), '.foo { ${expr} }');
+      assert.equal(getSourceForNodeByLoc(source, rule1), '.bar { }');
+      assert.equal(getSourceForNodeByRange(source, rule1), '.bar { }');
     });
 
     it('should handle multiple single-line expr on single-line css', () => {
@@ -180,22 +182,20 @@ describe('locationCorrection', () => {
       const decl0 = rule0.nodes[0] as Declaration;
       const decl1 = rule0.nodes[1] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
         '.foo { height: ${expr}; width: ${expr}; }'
       );
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
         '.foo { height: ${expr}; width: ${expr}; }'
       );
-      expect(getSourceForNodeByLoc(source, rule1)).to.equal('.bar { }');
-      expect(getSourceForNodeByRange(source, rule1)).to.equal('.bar { }');
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal('height: ${expr};');
-      expect(getSourceForNodeByRange(source, decl0)).to.equal(
-        'height: ${expr};'
-      );
-      expect(getSourceForNodeByLoc(source, decl1)).to.equal('width: ${expr};');
-      expect(getSourceForNodeByRange(source, decl1)).to.equal(
-        'width: ${expr};'
-      );
+      assert.equal(getSourceForNodeByLoc(source, rule1), '.bar { }');
+      assert.equal(getSourceForNodeByRange(source, rule1), '.bar { }');
+      assert.equal(getSourceForNodeByLoc(source, decl0), 'height: ${expr};');
+      assert.equal(getSourceForNodeByRange(source, decl0), 'height: ${expr};');
+      assert.equal(getSourceForNodeByLoc(source, decl1), 'width: ${expr};');
+      assert.equal(getSourceForNodeByRange(source, decl1), 'width: ${expr};');
     });
 
     it('should handle one multi-line expr on multi-line css', () => {
@@ -216,26 +216,44 @@ describe('locationCorrection', () => {
       const rule1 = root.nodes[1] as Rule;
       const decl0 = rule0.nodes[0] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
+        `.foo {
             height: $\{
               expr
             };
-          }`);
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
+        `.foo {
             height: $\{
               expr
             };
-          }`);
-      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
-          }`);
-      expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
-          }`);
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal(`height: $\{
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByLoc(source, rule1),
+        `.bar {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule1),
+        `.bar {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByLoc(source, decl0),
+        `height: $\{
               expr
-            };`);
-      expect(getSourceForNodeByRange(source, decl0)).to.equal(`height: $\{
+            };`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, decl0),
+        `height: $\{
               expr
-            };`);
+            };`
+      );
     });
 
     it('should handle multiple single-line expr on multi-line css', () => {
@@ -256,26 +274,34 @@ describe('locationCorrection', () => {
       const decl0 = rule0.nodes[0] as Declaration;
       const decl1 = rule0.nodes[1] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
+        `.foo {
             height: $\{expr};
             width: $\{expr};
-          }`);
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
+        `.foo {
             height: $\{expr};
             width: $\{expr};
-          }`);
-      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
-          }`);
-      expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
-          }`);
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal('height: ${expr};');
-      expect(getSourceForNodeByRange(source, decl0)).to.equal(
-        'height: ${expr};'
+          }`
       );
-      expect(getSourceForNodeByLoc(source, decl1)).to.equal('width: ${expr};');
-      expect(getSourceForNodeByRange(source, decl1)).to.equal(
-        'width: ${expr};'
+      assert.equal(
+        getSourceForNodeByLoc(source, rule1),
+        `.bar {
+          }`
       );
+      assert.equal(
+        getSourceForNodeByRange(source, rule1),
+        `.bar {
+          }`
+      );
+      assert.equal(getSourceForNodeByLoc(source, decl0), 'height: ${expr};');
+      assert.equal(getSourceForNodeByRange(source, decl0), 'height: ${expr};');
+      assert.equal(getSourceForNodeByLoc(source, decl1), 'width: ${expr};');
+      assert.equal(getSourceForNodeByRange(source, decl1), 'width: ${expr};');
     });
 
     it('should handle multiple multi-line expr on multi-line css', () => {
@@ -300,38 +326,62 @@ describe('locationCorrection', () => {
       const decl0 = rule0.nodes[0] as Declaration;
       const decl1 = rule0.nodes[1] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
+        `.foo {
             height: $\{
               expr
             };
             width: $\{
               expr
             };
-          }`);
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
+        `.foo {
             height: $\{
               expr
             };
             width: $\{
               expr
             };
-          }`);
-      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
-          }`);
-      expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
-          }`);
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal(`height: $\{
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByLoc(source, rule1),
+        `.bar {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule1),
+        `.bar {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByLoc(source, decl0),
+        `height: $\{
               expr
-            };`);
-      expect(getSourceForNodeByRange(source, decl0)).to.equal(`height: $\{
+            };`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, decl0),
+        `height: $\{
               expr
-            };`);
-      expect(getSourceForNodeByLoc(source, decl1)).to.equal(`width: $\{
+            };`
+      );
+      assert.equal(
+        getSourceForNodeByLoc(source, decl1),
+        `width: $\{
               expr
-            };`);
-      expect(getSourceForNodeByRange(source, decl1)).to.equal(`width: $\{
+            };`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, decl1),
+        `width: $\{
               expr
-            };`);
+            };`
+      );
     });
 
     it('should handle locations after multiple expr, same line', () => {
@@ -348,20 +398,22 @@ describe('locationCorrection', () => {
       const decl0 = rule0.nodes[0] as Declaration;
       const decl1 = rule0.nodes[1] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
+        `.foo {
             $\{expr}: $\{expr}; height: 4rem;
-          }`);
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
+        `.foo {
             $\{expr}: $\{expr}; height: 4rem;
-          }`);
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal(
-        '${expr}: ${expr};'
+          }`
       );
-      expect(getSourceForNodeByRange(source, decl0)).to.equal(
-        '${expr}: ${expr};'
-      );
-      expect(getSourceForNodeByLoc(source, decl1)).to.equal('height: 4rem;');
-      expect(getSourceForNodeByRange(source, decl1)).to.equal('height: 4rem;');
+      assert.equal(getSourceForNodeByLoc(source, decl0), '${expr}: ${expr};');
+      assert.equal(getSourceForNodeByRange(source, decl0), '${expr}: ${expr};');
+      assert.equal(getSourceForNodeByLoc(source, decl1), 'height: 4rem;');
+      assert.equal(getSourceForNodeByRange(source, decl1), 'height: 4rem;');
     });
   });
 
@@ -384,16 +436,28 @@ describe('locationCorrection', () => {
       const comment0 = root.nodes[1] as Comment;
       const rule1 = root.nodes[2] as Rule;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
-          }`);
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
-          }`);
-      expect(getSourceForNodeByLoc(source, comment0)).to.equal('${expr}');
-      expect(getSourceForNodeByRange(source, comment0)).to.equal('${expr}');
-      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`.bar {
-          }`);
-      expect(getSourceForNodeByRange(source, rule1)).to.equal(`.bar {
-          }`);
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
+        `.foo {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
+        `.foo {
+          }`
+      );
+      assert.equal(getSourceForNodeByLoc(source, comment0), '${expr}');
+      assert.equal(getSourceForNodeByRange(source, comment0), '${expr}');
+      assert.equal(
+        getSourceForNodeByLoc(source, rule1),
+        `.bar {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule1),
+        `.bar {
+          }`
+      );
     });
 
     it('should handle statement positions', () => {
@@ -414,26 +478,30 @@ describe('locationCorrection', () => {
       const decl0 = rule0.nodes[0] as Declaration;
       const decl2 = rule0.nodes[2] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
+        `.foo {
             color: hotpink;
 
             $\{expr}
 
             color: blue;
-          }`);
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
-            color: hotpink;
-
-            $\{expr}
-
-            color: blue;
-          }`);
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal('color: hotpink;');
-      expect(getSourceForNodeByRange(source, decl0)).to.equal(
-        'color: hotpink;'
+          }`
       );
-      expect(getSourceForNodeByLoc(source, decl2)).to.equal('color: blue;');
-      expect(getSourceForNodeByRange(source, decl2)).to.equal('color: blue;');
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
+        `.foo {
+            color: hotpink;
+
+            $\{expr}
+
+            color: blue;
+          }`
+      );
+      assert.equal(getSourceForNodeByLoc(source, decl0), 'color: hotpink;');
+      assert.equal(getSourceForNodeByRange(source, decl0), 'color: hotpink;');
+      assert.equal(getSourceForNodeByLoc(source, decl2), 'color: blue;');
+      assert.equal(getSourceForNodeByRange(source, decl2), 'color: blue;');
     });
 
     it('should handle selector positions', () => {
@@ -453,14 +521,20 @@ describe('locationCorrection', () => {
       const rule1 = root.nodes[1] as Rule;
       const decl0 = rule1.nodes[0] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule1)).to.equal(`$\{expr} {
+      assert.equal(
+        getSourceForNodeByLoc(source, rule1),
+        `$\{expr} {
             color: blue;
-          }`);
-      expect(getSourceForNodeByRange(source, rule1)).to.equal(`$\{expr} {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule1),
+        `$\{expr} {
             color: blue;
-          }`);
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal('color: blue;');
-      expect(getSourceForNodeByRange(source, decl0)).to.equal('color: blue;');
+          }`
+      );
+      assert.equal(getSourceForNodeByLoc(source, decl0), 'color: blue;');
+      assert.equal(getSourceForNodeByRange(source, decl0), 'color: blue;');
     });
 
     it('should handle property positions', () => {
@@ -478,20 +552,24 @@ describe('locationCorrection', () => {
       const decl0 = rule0.nodes[0] as Declaration;
       const decl1 = rule0.nodes[1] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
+        `.foo {
             $\{expr}: 2px;
             color: hotpink;
-          }`);
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
-            $\{expr}: 2px;
-            color: hotpink;
-          }`);
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal('${expr}: 2px;');
-      expect(getSourceForNodeByRange(source, decl0)).to.equal('${expr}: 2px;');
-      expect(getSourceForNodeByLoc(source, decl1)).to.equal('color: hotpink;');
-      expect(getSourceForNodeByRange(source, decl1)).to.equal(
-        'color: hotpink;'
+          }`
       );
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
+        `.foo {
+            $\{expr}: 2px;
+            color: hotpink;
+          }`
+      );
+      assert.equal(getSourceForNodeByLoc(source, decl0), '${expr}: 2px;');
+      assert.equal(getSourceForNodeByRange(source, decl0), '${expr}: 2px;');
+      assert.equal(getSourceForNodeByLoc(source, decl1), 'color: hotpink;');
+      assert.equal(getSourceForNodeByRange(source, decl1), 'color: hotpink;');
     });
 
     it('should handle comment positions', () => {
@@ -509,24 +587,30 @@ describe('locationCorrection', () => {
       const comment0 = rule0.nodes[0] as Comment;
       const decl0 = rule0.nodes[1] as Declaration;
 
-      expect(getSourceForNodeByLoc(source, rule0)).to.equal(`.foo {
+      assert.equal(
+        getSourceForNodeByLoc(source, rule0),
+        `.foo {
             /* comment $\{expr} */
             color: hotpink;
-          }`);
-      expect(getSourceForNodeByRange(source, rule0)).to.equal(`.foo {
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByRange(source, rule0),
+        `.foo {
             /* comment $\{expr} */
             color: hotpink;
-          }`);
-      expect(getSourceForNodeByLoc(source, comment0)).to.equal(
+          }`
+      );
+      assert.equal(
+        getSourceForNodeByLoc(source, comment0),
         '/* comment ${expr} */'
       );
-      expect(getSourceForNodeByRange(source, comment0)).to.equal(
+      assert.equal(
+        getSourceForNodeByRange(source, comment0),
         '/* comment ${expr} */'
       );
-      expect(getSourceForNodeByLoc(source, decl0)).to.equal('color: hotpink;');
-      expect(getSourceForNodeByRange(source, decl0)).to.equal(
-        'color: hotpink;'
-      );
+      assert.equal(getSourceForNodeByLoc(source, decl0), 'color: hotpink;');
+      assert.equal(getSourceForNodeByRange(source, decl0), 'color: hotpink;');
     });
   });
 
@@ -544,8 +628,8 @@ describe('locationCorrection', () => {
       const rule = root.nodes[0] as Rule;
       const decl = rule.nodes[0] as Declaration;
 
-      expect(rule.raws['foo:before']).to.equal('          ');
-      expect(decl.raws['foo:before']).to.equal('\n            ');
+      assert.equal(rule.raws['foo:before'], '          ');
+      assert.equal(decl.raws['foo:before'], '\n            ');
     });
 
     it('should compute corrected after', () => {
@@ -561,9 +645,9 @@ describe('locationCorrection', () => {
       const rule = root.nodes[0] as Rule;
       const decl = rule.nodes[0] as Declaration;
 
-      expect(root.raws['foo:after']).to.equal('\n        ');
-      expect(rule.raws['foo:after']).to.equal('\n          ');
-      expect(decl.raws['foo:after']).to.equal(undefined);
+      assert.equal(root.raws['foo:after'], '\n        ');
+      assert.equal(rule.raws['foo:after'], '\n          ');
+      assert.equal(decl.raws['foo:after'], undefined);
     });
 
     it('should compute corrected between with newlines', () => {
@@ -580,7 +664,7 @@ describe('locationCorrection', () => {
       const rule = root.nodes[0] as Rule;
       const decl = rule.nodes[0] as Declaration;
 
-      expect(decl.raws['foo:between']).to.equal(':\n              ');
+      assert.equal(decl.raws['foo:between'], ':\n              ');
     });
 
     it('should not compute corrected between if no newlines', () => {
@@ -596,7 +680,7 @@ describe('locationCorrection', () => {
       const rule = root.nodes[0] as Rule;
       const decl = rule.nodes[0] as Declaration;
 
-      expect(decl.raws['foo:between']).to.equal(undefined);
+      assert.equal(decl.raws['foo:between'], undefined);
     });
 
     it('should compute corrected selector', () => {
@@ -612,7 +696,7 @@ describe('locationCorrection', () => {
       const root = doc.nodes[0] as Root;
       const rule = root.nodes[0] as Rule;
 
-      expect(rule.raws['foo:selector']).to.equal('.foo,\n          .bar');
+      assert.equal(rule.raws['foo:selector'], '.foo,\n          .bar');
     });
 
     it('should not compute corrected selector if no newlines', () => {
@@ -627,7 +711,7 @@ describe('locationCorrection', () => {
       const root = doc.nodes[0] as Root;
       const rule = root.nodes[0] as Rule;
 
-      expect(rule.raws['foo:selector']).to.equal(undefined);
+      assert.equal(rule.raws['foo:selector'], undefined);
     });
 
     it('should compute corrected declaration values', () => {
@@ -644,7 +728,7 @@ describe('locationCorrection', () => {
       const rule = root.nodes[0] as Rule;
       const decl = rule.nodes[0] as Declaration;
 
-      expect(decl.raws['foo:value']).to.equal('2px\n              2px');
+      assert.equal(decl.raws['foo:value'], '2px\n              2px');
     });
 
     it('should not compute corrected values if no newlines', () => {
@@ -660,7 +744,7 @@ describe('locationCorrection', () => {
       const rule = root.nodes[0] as Rule;
       const decl = rule.nodes[0] as Declaration;
 
-      expect(decl.raws['foo:value']).to.equal(undefined);
+      assert.equal(decl.raws['foo:value'], undefined);
     });
 
     it('should compute corrected at-rule params', () => {
@@ -679,7 +763,8 @@ describe('locationCorrection', () => {
       const root = doc.nodes[0] as Root;
       const rule = root.nodes[0] as AtRule;
 
-      expect(rule.raws['foo:params']).to.equal(
+      assert.equal(
+        rule.raws['foo:params'],
         '(\n            a:5 and b:6\n          )'
       );
     });
@@ -698,7 +783,7 @@ describe('locationCorrection', () => {
       const root = doc.nodes[0] as Root;
       const rule = root.nodes[0] as AtRule;
 
-      expect(rule.raws['foo:params']).to.equal(undefined);
+      assert.equal(rule.raws['foo:params'], undefined);
     });
   });
 });

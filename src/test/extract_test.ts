@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import {assert} from 'chai';
 import {extractTemplatesFromSource} from '../extract.js';
 
 describe('extract', () => {
@@ -7,7 +7,7 @@ describe('extract', () => {
       const result = extractTemplatesFromSource('', {
         id: 'foo'
       });
-      expect(result.size).to.equal(0);
+      assert.equal(result.size, 0);
     });
 
     it('should detect template tags', () => {
@@ -21,7 +21,7 @@ describe('extract', () => {
         id: 'foo',
         tagNames: ['css']
       });
-      expect(result.size).to.equal(2);
+      assert.equal(result.size, 2);
     });
 
     it('should parse typescript', () => {
@@ -33,7 +33,7 @@ describe('extract', () => {
         id: 'foo',
         tagNames: ['css']
       });
-      expect(result.size).to.equal(1);
+      assert.equal(result.size, 1);
     });
 
     it('should parse jsx', () => {
@@ -45,7 +45,7 @@ describe('extract', () => {
         id: 'foo',
         tagNames: ['css']
       });
-      expect(result.size).to.equal(1);
+      assert.equal(result.size, 1);
     });
 
     it('should respect disable comments', () => {
@@ -57,7 +57,7 @@ describe('extract', () => {
         id: 'foo',
         tagNames: ['css']
       });
-      expect(result.size).to.equal(0);
+      assert.equal(result.size, 0);
     });
 
     it('should parse decorators', () => {
@@ -71,7 +71,7 @@ describe('extract', () => {
         id: 'foo',
         tagNames: ['css']
       });
-      expect(result.size).to.equal(1);
+      assert.equal(result.size, 1);
     });
 
     it('should respect babel options', () => {
@@ -85,7 +85,7 @@ describe('extract', () => {
           plugins: []
         }
       });
-      expect(result.size).to.equal(1);
+      assert.equal(result.size, 1);
     });
   });
 });

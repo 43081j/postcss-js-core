@@ -1,5 +1,5 @@
 import {createTailwindTransform} from '../tailwind.js';
-import {expect} from 'chai';
+import {assert} from 'chai';
 
 describe('createTailwindTransform', () => {
   it('should do nothing if no tag names specified', () => {
@@ -15,7 +15,7 @@ describe('createTailwindTransform', () => {
       id: 'foo'
     });
 
-    expect(transform(source)).to.equal(source);
+    assert.equal(transform(source), source);
   });
 
   it('should strip any specified tags by name', () => {
@@ -35,7 +35,7 @@ describe('createTailwindTransform', () => {
       tagNames: ['css']
     });
 
-    expect(transform(source)).to.equal(expected);
+    assert.equal(transform(source), expected);
   });
 
   it('should strip CSS templates containing expressions', () => {
@@ -59,6 +59,6 @@ describe('createTailwindTransform', () => {
       id: 'foo',
       tagNames: ['css']
     });
-    expect(transform(source)).to.equal(expected);
+    assert.equal(transform(source), expected);
   });
 });

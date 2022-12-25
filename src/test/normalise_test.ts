@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import {assert} from 'chai';
 import {TaggedTemplateExpression} from '@babel/types';
 import {computeNormalisedSource} from '../normalise.js';
 import {extractTemplatesFromSource} from '../extract.js';
@@ -25,7 +25,7 @@ describe('normalise', () => {
       const [templateSource, template] = computeNodeAndSource(source);
       const result = computeNormalisedSource(templateSource, template);
 
-      expect(result.prefixOffsets).to.deep.equal({
+      assert.deepEqual(result.prefixOffsets, {
         lines: 1,
         offset: 1
       });
@@ -38,7 +38,7 @@ describe('normalise', () => {
       const [templateSource, template] = computeNodeAndSource(source);
       const result = computeNormalisedSource(templateSource, template);
 
-      expect(result.prefixOffsets).to.deep.equal({
+      assert.deepEqual(result.prefixOffsets, {
         lines: 1,
         offset: 4
       });
@@ -51,7 +51,7 @@ describe('normalise', () => {
       const [templateSource, template] = computeNodeAndSource(source);
       const result = computeNormalisedSource(templateSource, template);
 
-      expect(result.prefixOffsets).to.deep.equal({
+      assert.deepEqual(result.prefixOffsets, {
         lines: 1,
         offset: 4
       });
@@ -64,12 +64,15 @@ describe('normalise', () => {
       const [templateSource, template] = computeNodeAndSource(source);
       const normalised = computeNormalisedSource(templateSource, template);
 
-      expect([...normalised.values]).to.deep.equal([
-        [1, 6],
-        [2, 6],
-        [-1, 6]
-      ]);
-      expect(normalised.result).to.equal('  .foo { color: hotpink; }\n');
+      assert.deepEqual(
+        [...normalised.values],
+        [
+          [1, 6],
+          [2, 6],
+          [-1, 6]
+        ]
+      );
+      assert.equal(normalised.result, '  .foo { color: hotpink; }\n');
     });
 
     it('should leave deindented lines untouched', () => {
@@ -78,8 +81,8 @@ describe('normalise', () => {
       const [templateSource, template] = computeNodeAndSource(source);
       const normalised = computeNormalisedSource(templateSource, template);
 
-      expect([...normalised.values]).to.deep.equal([]);
-      expect(normalised.result).to.equal('    .foo { color: hotpink; }');
+      assert.deepEqual([...normalised.values], []);
+      assert.equal(normalised.result, '    .foo { color: hotpink; }');
     });
 
     it('should handle source with no padding', () => {
@@ -87,8 +90,8 @@ describe('normalise', () => {
       const [templateSource, template] = computeNodeAndSource(source);
       const normalised = computeNormalisedSource(templateSource, template);
 
-      expect([...normalised.values]).to.deep.equal([]);
-      expect(normalised.result).to.equal('.foo { color: hotpink; }');
+      assert.deepEqual([...normalised.values], []);
+      assert.equal(normalised.result, '.foo { color: hotpink; }');
     });
   });
 });
