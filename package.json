@@ -1,6 +1,6 @@
 {
   "name": "postcss-js-core",
-  "version": "0.0.2-xmas-hackery.4",
+  "version": "0.1.0",
   "description": "The core module of various postcss css-in-js syntaxes",
   "main": "lib/main.js",
   "files": [
