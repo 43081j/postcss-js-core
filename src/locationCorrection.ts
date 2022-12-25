@@ -117,16 +117,22 @@ function computeBeforeAfter(
     (node.type === 'root' || node.source?.end)
   ) {
     const numAfterLines = node.raws.after.split('\n').length - 1;
-    const line =
-      node.type === 'root'
-        ? node.nodes[node.nodes.length - 1]?.source?.end?.line
-        : node.source?.end?.line;
+    let line: number | undefined;
+
+    if (node.type === 'root') {
+      const lastLine = node.nodes[node.nodes.length - 1]?.source?.end?.line;
+      if (lastLine !== undefined) {
+        line = lastLine;
+      }
+    } else {
+      const lastLine = node.source?.end?.line;
+      if (lastLine !== undefined) {
+        line = lastLine - numAfterLines;
+      }
+    }
+
     if (line !== undefined) {
-      const corrected = computeCorrectedString(
-        node.raws.after,
-        line - numAfterLines,
-        state
-      );
+      const corrected = computeCorrectedString(node.raws.after, line, state);
       node.raws[`${options.id}:after`] = corrected;
     }
   }
