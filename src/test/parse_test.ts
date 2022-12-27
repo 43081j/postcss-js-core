@@ -3,6 +3,10 @@ import {createParser} from '../parse.js';
 import {assert} from 'chai';
 import {ExtractedStylesheet} from '../types.js';
 import {Root, Document, Declaration} from 'postcss';
+import less = require('postcss-less');
+import {parse as scssParser} from 'postcss-scss';
+
+const {parse: lessParser} = less;
 
 describe('parse', () => {
   afterEach(() => {
@@ -145,6 +149,66 @@ describe('parse', () => {
       const doc = parse(source);
 
       assert.equal(doc.toString(), '  .foo { /* POSTCSS_foo_0 */ }\n');
+    });
+
+    it('should support custom sub-parsers (less)', () => {
+      const parse = createParser({
+        id: 'foo',
+        tagNames: ['css'],
+        parser: lessParser!
+      });
+      const source = `
+        css\`
+          .foo {
+            color: hotpink;
+            .bordered();
+          }
+        \`;
+      `;
+      const doc = parse(source);
+
+      assert.equal(
+        doc.toString(),
+        `  .foo {
+    color: hotpink;
+    @bordered();
+  }
+`
+      );
+    });
+
+    it('should support custom sub-parsers (sass)', () => {
+      const parse = createParser({
+        id: 'foo',
+        tagNames: ['css'],
+        parser: scssParser
+      });
+      const source = `
+        css\`
+          @mixin theme($theme: hotpink) {
+            color: $theme;
+            box-shadow: 0 0 1px rgba($theme, .25);
+          }
+
+          .foo {
+            @include theme;
+          }
+        \`;
+      `;
+      const doc = parse(source);
+
+      assert.equal(
+        doc.toString(),
+        `  @mixin theme($theme: hotpink) {
+    color: $theme;
+    box-shadow: 0 0 1px rgba($theme, .25);
+  }
+
+  .foo {
+    @include theme;
+  }
+`
+      );
     });
   });
 });

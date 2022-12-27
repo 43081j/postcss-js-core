@@ -61,9 +61,10 @@ function parseStyles(
     };
 
     let root: Root;
+    const parser: Parser<Document | Root> = options.parser ?? parseCSS;
 
     try {
-      root = parseCSS(extractedStylesheet.source, {
+      root = parser(extractedStylesheet.source, {
         ...postcssOptions,
         map: false
       }) as Root;

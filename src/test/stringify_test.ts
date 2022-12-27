@@ -2,6 +2,12 @@ import {createStringifier} from '../stringify.js';
 import {assert} from 'chai';
 import {createParser} from '../parse.js';
 import {Parser, Root, Document, Stringifier, Rule, Declaration} from 'postcss';
+import lessStringifier = require('postcss-less/lib/LessStringifier.js');
+import less = require('postcss-less');
+import {parse as scssParser} from 'postcss-scss';
+import scssStringifier = require('postcss-scss/lib/scss-stringifier');
+
+const {parse: lessParser} = less;
 
 describe('createStringifier', () => {
   let parse: Parser<Root | Document>;
@@ -551,6 +557,86 @@ describe('createStringifier', () => {
       output,
       `
       css\`.foo\\\\:bar { color: hotpink; }\`;
+    `
+    );
+  });
+
+  it('should support custom sub-syntaxes (less)', () => {
+    stringify = createStringifier({
+      id: 'foo',
+      tagNames: ['css'],
+      stringifier: lessStringifier
+    });
+    parse = createParser({
+      id: 'foo',
+      tagNames: ['css'],
+      parser: lessParser!
+    });
+    const source = `
+      css\`
+        .foo {
+          color: hotpink;
+          .foo();
+        }
+      \`;
+    `;
+
+    const ast = parse(source);
+    const output = ast.toString({stringify});
+
+    assert.equal(
+      output,
+      `
+      css\`
+        .foo {
+          color: hotpink;
+          .foo();
+        }
+      \`;
+    `
+    );
+  });
+
+  it('should support custom sub-syntaxes (scss)', () => {
+    stringify = createStringifier({
+      id: 'foo',
+      tagNames: ['css'],
+      stringifier: scssStringifier
+    });
+    parse = createParser({
+      id: 'foo',
+      tagNames: ['css'],
+      parser: scssParser
+    });
+    const source = `
+      css\`
+        @mixin theme($theme: hotpink) {
+          color: $theme;
+          box-shadow: 0 0 1px rgba($theme, .25);
+        }
+
+        .foo {
+          @include theme;
+        }
+      \`;
+    `;
+
+    const ast = parse(source);
+    const output = ast.toString({stringify});
+
+    assert.equal(
+      output,
+      `
+      css\`
+        @mixin theme($theme: hotpink) {
+          color: $theme;
+          box-shadow: 0 0 1px rgba($theme, .25);
+        }
+
+        .foo {
+          @include theme;
+        }
+      \`;
     `
     );
   });

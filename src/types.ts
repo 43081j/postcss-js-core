@@ -1,4 +1,10 @@
 import {ParserOptions as BabelParserOptions} from '@babel/parser';
+import {Parser, Document, Root, Builder} from 'postcss';
+import Stringifier from 'postcss/lib/stringifier.js';
+
+interface StringifierConstructor {
+  new (builder: Builder): Stringifier;
+}
 
 export type PlaceholderFunc = (
   key: number,
@@ -11,6 +17,8 @@ export interface SyntaxOptions {
   tagNames?: string[];
   babelOptions?: BabelParserOptions;
   placeholder?: PlaceholderFunc;
+  parser?: Parser<Document | Root>;
+  stringifier?: StringifierConstructor;
 }
 
 export interface ExpressionReplacement {
