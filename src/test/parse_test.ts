@@ -3,10 +3,8 @@ import {createParser} from '../parse.js';
 import {assert} from 'chai';
 import {ExtractedStylesheet} from '../types.js';
 import {Root, Document, Declaration} from 'postcss';
-import less = require('postcss-less');
+import {parse as lessParser} from 'postcss-less';
 import {parse as scssParser} from 'postcss-scss';
-
-const {parse: lessParser} = less;
 
 describe('parse', () => {
   afterEach(() => {

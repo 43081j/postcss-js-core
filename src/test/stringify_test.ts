@@ -3,11 +3,9 @@ import {assert} from 'chai';
 import {createParser} from '../parse.js';
 import {Parser, Root, Document, Stringifier, Rule, Declaration} from 'postcss';
 import lessStringifier = require('postcss-less/lib/LessStringifier.js');
-import less = require('postcss-less');
+import {parse as lessParser} from 'postcss-less';
 import {parse as scssParser} from 'postcss-scss';
 import scssStringifier = require('postcss-scss/lib/scss-stringifier');
-
-const {parse: lessParser} = less;
 
 describe('createStringifier', () => {
   let parse: Parser<Root | Document>;
