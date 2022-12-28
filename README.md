@@ -50,7 +50,13 @@ as follows:
   id: 'my-syntax',
 
   // Tagged templates to look for
-  tagNames: ['css']
+  tagNames: ['css'],
+
+  // Custom sub-parser
+  parser: lessSyntax.parse,
+
+  // Custom sub-stringifier _class_
+  stringifier: require('postcss-less/lib/LessStringifier.js')
 }
 ```
 
@@ -67,3 +73,29 @@ Two forms are supported:
 - Exact tag names (e.g. `['css']`)
 - Tag name prefixes (e.g. `['css.*']` would match `css.foo`, it is _not_ a
 RegExp)
+
+### Sub-syntax
+
+You may want to support a "syntax within a syntax". For example, LESS sources
+inside your JavaScript files.
+
+In order to do this, you must pass the syntax's parser and stringifier _class_
+in your options.
+
+For example:
+
+```ts
+createParser({
+  // ...
+  parser: require('postcss-less').parse,
+  stringifer: require('postcss-less/lib/LessStringifier.js')
+});
+```
+
+**Importantly, you must pass the _class_ of the stringifier rather than the
+stringify function.** This is so we can correctly extend it.
+
+Two common ones are (at time of writing this) located at:
+
+* SCSS - `postcss-scss/lib/scss-stringifier.js`
+* LESS - `postcss-less/lib/LessStringifier.js`
