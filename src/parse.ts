@@ -70,14 +70,15 @@ function parseStyles(
       }) as Root;
     } catch (err) {
       if (err instanceof CssSyntaxError) {
-        const line = node.loc ? ` (Line ${node.loc.start.line})` : '';
+        const file = postcssOptions?.from ?? 'unknown';
+        const line = node.loc?.start.line ?? 'unknown';
 
         console.warn(
-          '[postcss-lit]',
-          `Skipping template${line}` +
+          `[postcss (${options.id})]`,
+          `Skipping template (file: ${file}, line: ${line})` +
             ' as it included either invalid syntax or complex' +
             ' expressions the plugin could not interpret. Consider using a' +
-            ' "// postcss-lit-disable-next-line" comment to disable' +
+            ` "// postcss-${options.id}-disable-next-line" comment to disable` +
             ' this message'
         );
       }
