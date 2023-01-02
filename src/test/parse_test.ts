@@ -21,10 +21,20 @@ describe('parse', () => {
     it('should skip and log invalid templates', () => {
       const stub = hanbi.stubMethod(console, 'warn');
       const parse = createParser({id: 'foo', tagNames: ['css']});
-      const doc = parse('css`.foo {`;');
+      const doc = parse('css`.foo {`;', {from: 'somefile'});
 
       assert.equal(doc.nodes.length, 0);
       assert.equal(stub.called, true);
+      assert.ok(
+        stub.calledWith(
+          '[postcss (foo)]',
+          'Skipping template (file: somefile, line: 1)' +
+            ' as it included either invalid syntax or complex' +
+            ' expressions the plugin could not interpret. Consider using a' +
+            ' "// postcss-foo-disable-next-line" comment to disable' +
+            ' this message'
+        )
+      );
     });
 
     it('should populate raws', () => {
