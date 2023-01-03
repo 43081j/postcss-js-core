@@ -638,4 +638,19 @@ describe('createStringifier', () => {
     `
     );
   });
+
+  it('should stringify nested templates', () => {
+    const source = `
+      css\`
+        $\{css\`
+          color: hotpink;
+        \`}
+        color: blue;
+      \`;
+    `;
+
+    const ast = parse(source);
+    const output = ast.toString({stringify});
+    assert.equal(output, source);
+  });
 });

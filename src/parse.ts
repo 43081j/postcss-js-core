@@ -7,12 +7,15 @@ import {
   Parser,
   ProcessOptions
 } from 'postcss';
+import {Node, TaggedTemplateExpression} from '@babel/types';
+import {NodePath} from '@babel/traverse';
 import {locationCorrectionWalker} from './locationCorrection.js';
 import {extractTemplatesFromSource} from './extract.js';
 import {computeReplacedSource} from './replacements.js';
 import {computeNormalisedSource} from './normalise.js';
 import {SyntaxOptions, ExtractedStylesheet} from './types.js';
 import {createPlaceholderFunc} from './placeholders.js';
+import {nodeContainsChild} from './esUtils.js';
 
 export type PostcssParseOptions = Pick<ProcessOptions, 'map' | 'from'>;
 
@@ -34,6 +37,11 @@ function parseStyles(
 
   const doc = new Document();
   let currentOffset = 0;
+  let lastExtractedStyle: {offset: number; root?: Root; node?: NodePath<Node>} =
+    {
+      offset: 0
+    };
+  let previousExtractedStyle: NodePath<TaggedTemplateExpression> | undefined;
 
   for (const path of extractedStyles) {
     const quasi = path.get('quasi');
@@ -55,11 +63,17 @@ function parseStyles(
       path
     );
 
+    // The last seen stylesheet contains this one
+    const isNested =
+      previousExtractedStyle !== undefined &&
+      nodeContainsChild(previousExtractedStyle, path);
+
     const extractedStylesheet: ExtractedStylesheet = {
       replacements: replacedSource.replacements,
       source: normalisedSource.result,
       prefixOffsets: normalisedSource.prefixOffsets,
-      indentationMap: normalisedSource.values
+      indentationMap: normalisedSource.values,
+      isNested
     };
 
     let root: Root;
@@ -115,12 +129,22 @@ function parseStyles(
     doc.nodes.push(root);
 
     currentOffset = quasi.node.range[1] - 1;
+
+    // We track this so we can know the last template in the file, in
+    // terms of source offset (since nested nodes are visited after their
+    // parents)
+    if (lastExtractedStyle.offset < currentOffset) {
+      lastExtractedStyle = {offset: currentOffset, root, node: path};
+    }
+
+    previousExtractedStyle = path;
   }
 
   if (doc.nodes.length > 0) {
-    const last = doc.nodes[doc.nodes.length - 1];
-    if (last) {
-      last.raws.codeAfter = source.slice(currentOffset);
+    if (lastExtractedStyle.root) {
+      lastExtractedStyle.root.raws.codeAfter = source.slice(
+        lastExtractedStyle.offset
+      );
     }
   }
 
