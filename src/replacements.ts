@@ -1,4 +1,5 @@
 import {TaggedTemplateExpression} from '@babel/types';
+import {NodePath} from '@babel/traverse';
 import {ExpressionReplacement, PlaceholderFunc} from './types.js';
 
 export interface SourceReplacementResult {
@@ -16,7 +17,7 @@ export interface SourceReplacementResult {
  */
 export function computeReplacedSource(
   source: string,
-  node: TaggedTemplateExpression,
+  node: NodePath<TaggedTemplateExpression>,
   computePlaceholder: PlaceholderFunc
 ): SourceReplacementResult {
   const result: SourceReplacementResult = {
@@ -24,20 +25,33 @@ export function computeReplacedSource(
     result: ''
   };
 
-  for (let i = 0; i < node.quasi.quasis.length; i++) {
-    const template = node.quasi.quasis[i];
-    const expr = node.quasi.expressions[i];
-    const nextTemplate = node.quasi.quasis[i + 1];
+  const quasi = node.get('quasi');
+  const quasis = quasi.get('quasis');
+  const expressions = quasi.get('expressions');
+
+  for (let i = 0; i < quasis.length; i++) {
+    const template = quasis[i];
+    const expr = expressions[i];
+    const nextTemplate = quasis[i + 1];
 
     if (template) {
-      result.result += template.value.raw;
+      result.result += template.node.value.raw;
 
-      if (expr && nextTemplate && nextTemplate.range && template.range) {
-        const exprText = source.slice(template.range[1], nextTemplate.range[0]);
+      if (
+        expr &&
+        nextTemplate &&
+        nextTemplate.node.range &&
+        template.node.range
+      ) {
+        const exprText = source.slice(
+          template.node.range[1],
+          nextTemplate.node.range[0]
+        );
         const placeholder = computePlaceholder(
           i,
+          node,
           result.result,
-          nextTemplate?.value.raw
+          nextTemplate.node.value.raw
         );
         result.replacements.push({
           source: exprText,

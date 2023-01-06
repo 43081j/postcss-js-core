@@ -1,20 +1,23 @@
 import {Root, Position, Document, ChildNode, AnyNode} from 'postcss';
 import {TaggedTemplateExpression} from '@babel/types';
+import {NodePath} from '@babel/traverse';
 import {ExtractedStylesheet, SyntaxOptions} from './types.js';
 
 const correctLocation = (
-  node: TaggedTemplateExpression,
+  node: NodePath<TaggedTemplateExpression>,
   loc: Position,
   state?: ExtractedStylesheet
 ): Position => {
-  if (!node.quasi.loc || !node.quasi.range) {
+  const quasi = node.get('quasi');
+
+  if (!quasi.node.loc || !quasi.node.range) {
     return loc;
   }
 
   const baseIndentations = state?.indentationMap;
   const baseIndentation = baseIndentations?.get(loc.line) ?? 0;
-  const nodeLoc = node.quasi.loc;
-  const nodeOffset = node.quasi.range[0];
+  const nodeLoc = quasi.node.loc;
+  const nodeOffset = quasi.node.range[0];
   let lineOffset = nodeLoc.start.line - 1;
   let newOffset = loc.offset + nodeOffset + 1;
   let currentLine = 1 + lineOffset;
@@ -31,30 +34,33 @@ const correctLocation = (
     }
   }
 
-  for (let i = 0; i < node.quasi.expressions.length; i++) {
-    const expr = node.quasi.expressions[i];
-    const previousQuasi = node.quasi.quasis[i];
-    const nextQuasi = node.quasi.quasis[i + 1];
+  const expressions = quasi.get('expressions');
+  const quasis = quasi.get('quasis');
+
+  for (let i = 0; i < expressions.length; i++) {
+    const expr = expressions[i];
+    const previousQuasi = quasis[i];
+    const nextQuasi = quasis[i + 1];
     const replacement = state?.replacements?.[i];
 
     if (
       expr &&
-      expr.loc &&
-      expr.range &&
+      expr.node.loc &&
+      expr.node.range &&
       nextQuasi &&
       previousQuasi &&
-      previousQuasi.loc &&
-      nextQuasi.loc &&
-      previousQuasi.range &&
-      nextQuasi.range &&
-      previousQuasi.range[1] < newOffset &&
+      previousQuasi.node.loc &&
+      nextQuasi.node.loc &&
+      previousQuasi.node.range &&
+      nextQuasi.node.range &&
+      previousQuasi.node.range[1] < newOffset &&
       replacement
     ) {
       const placeholderSize = replacement.replacement.length;
       const exprSize =
-        nextQuasi.range[0] - previousQuasi.range[1] - placeholderSize;
-      const exprStartLine = previousQuasi.loc.end.line;
-      const exprEndLine = nextQuasi.loc.start.line;
+        nextQuasi.node.range[0] - previousQuasi.node.range[1] - placeholderSize;
+      const exprStartLine = previousQuasi.node.loc.end.line;
+      const exprEndLine = nextQuasi.node.loc.start.line;
       newOffset += exprSize;
       lineOffset += exprEndLine - exprStartLine;
 
@@ -64,8 +70,8 @@ const correctLocation = (
           columnOffset = exprSize;
         } else {
           columnOffset =
-            nextQuasi.loc.start.column -
-            previousQuasi.loc.end.column -
+            nextQuasi.node.loc.start.column -
+            previousQuasi.node.loc.end.column -
             placeholderSize;
         }
       } else {
@@ -244,13 +250,13 @@ function computeCorrectedRawValue<T extends AnyNode>(
 /**
  * Creates an AST walker/visitor for correcting PostCSS AST locations to
  * those in the original JavaScript document.
- * @param {TaggedTemplateExpression} expr Expression the original source came
- * from
+ * @param {NodePath<TaggedTemplateExpression>} expr Expression the original
+ * source came from
  * @param {SyntaxOptions} options Options for custom syntax
  * @return {Function}
  */
 export function locationCorrectionWalker(
-  expr: TaggedTemplateExpression,
+  expr: NodePath<TaggedTemplateExpression>,
   options: SyntaxOptions
 ): (node: Document | Root | ChildNode) => void {
   return (node: Document | Root | ChildNode): void => {

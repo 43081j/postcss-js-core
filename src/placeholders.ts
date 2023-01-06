@@ -1,3 +1,5 @@
+import {NodePath} from '@babel/traverse';
+import {Node} from '@babel/types';
 import {PlaceholderFunc, SyntaxOptions} from './types.js';
 
 export type Position =
@@ -119,12 +121,33 @@ export function computePossiblePosition(
 }
 
 /**
+ * Tries to evaluate an AST node into a string value
+ * @param {NodePath<Node>} node Node to evaluate
+ * @return {string|undefined}
+ */
+function tryEvaluateNode(node: NodePath<Node>): string | undefined {
+  const val = node.evaluate();
+
+  if (val.confident) {
+    return val.value;
+  }
+
+  return undefined;
+}
+
+/**
  * Computes the placeholder for an expression
  * @param {SyntaxOptions} options Syntax options
  * @return {PlaceholderFunc}
  */
 export function createPlaceholderFunc(options: SyntaxOptions): PlaceholderFunc {
-  return (i, before, after) => {
+  return (i, node, before, after) => {
+    const value = tryEvaluateNode(node);
+
+    if (value !== undefined) {
+      return value;
+    }
+
     if (!before) {
       return defaultPlaceholder(i, options.id);
     }
