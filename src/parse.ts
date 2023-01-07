@@ -36,11 +36,13 @@ function parseStyles(
     options.placeholder ?? createPlaceholderFunc(options);
 
   const doc = new Document();
-  let currentOffset = 0;
-  let lastExtractedStyle: {offset: number; root?: Root; node?: NodePath<Node>} =
-    {
-      offset: 0
-    };
+  let lastExtractedStyle: {
+    endOffset: number;
+    root?: Root;
+    node?: NodePath<Node>;
+  } = {
+    endOffset: 0
+  };
   let previousExtractedStyle: NodePath<TaggedTemplateExpression> | undefined;
 
   for (const path of extractedStyles) {
@@ -112,8 +114,17 @@ function parseStyles(
       root.raws['beforeStart'] = '';
     }
 
+    // TODO (43081j): YOU WERE HERE!
+    // you need to somehow figure out that the prev offset in the case of
+    // a nested template is actually the start of the containing expression,
+    // which itself is actually the end of the preceding quasi
+    const previousExtractedStyleOffset = previousExtractedStyle?.node.quasi
+      .range
+      ? previousExtractedStyle.node.quasi.range[1] - 1
+      : 0;
+
     root.raws.codeBefore = source.slice(
-      currentOffset,
+      previousExtractedStyleOffset,
       startIndex + extractedStylesheet.prefixOffsets.offset
     );
 
@@ -128,13 +139,17 @@ function parseStyles(
     root.walk(walker);
     doc.nodes.push(root);
 
-    currentOffset = quasi.node.range[1] - 1;
+    const currentExtractedStyleOffset = quasi.node.range[1] - 1;
 
     // We track this so we can know the last template in the file, in
     // terms of source offset (since nested nodes are visited after their
     // parents)
-    if (lastExtractedStyle.offset < currentOffset) {
-      lastExtractedStyle = {offset: currentOffset, root, node: path};
+    if (lastExtractedStyle.endOffset < currentExtractedStyleOffset) {
+      lastExtractedStyle = {
+        endOffset: currentExtractedStyleOffset,
+        root,
+        node: path
+      };
     }
 
     previousExtractedStyle = path;
@@ -143,7 +158,7 @@ function parseStyles(
   if (doc.nodes.length > 0) {
     if (lastExtractedStyle.root) {
       lastExtractedStyle.root.raws.codeAfter = source.slice(
-        lastExtractedStyle.offset
+        lastExtractedStyle.endOffset
       );
     }
   }
