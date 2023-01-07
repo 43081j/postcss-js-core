@@ -10,7 +10,7 @@ export interface SourceReplacementResult {
 /**
  * Computes the source with all expressions replaced
  * @param {string} source Original source text
- * @param {TaggedTemplateExpression} node Node to traverse
+ * @param {NodePath<TaggedTemplateExpression>} node Node to traverse
  * @param {Function} computePlaceholder Function used to compute the
  * placeholder for a given expression
  * @return {SourceReplacement}
