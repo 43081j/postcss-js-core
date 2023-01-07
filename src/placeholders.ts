@@ -62,6 +62,12 @@ export function computePossiblePosition(
 ): Position {
   let possiblyInComment = false;
   let possiblePosition: Position = 'default';
+
+  // Special case for top level interpolation
+  if (prefix.trim().length === 0) {
+    return 'block';
+  }
+
   for (let i = prefix.length; i > 0; i--) {
     const chr = prefix[i];
     if (possiblyInComment) {
@@ -173,7 +179,7 @@ export function createPlaceholderFunc(
       return value;
     }
 
-    if (!before) {
+    if (before === undefined) {
       return defaultPlaceholder(i, syntax.id);
     }
 

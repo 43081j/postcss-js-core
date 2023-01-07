@@ -142,6 +142,42 @@ describe('stylelint', () => {
     );
   });
 
+  it('should be fixable by stylelint with nested templates', async () => {
+    const source = `
+      css\`
+        $\{css\`
+          color: hotpink;;
+        \`};
+
+        color: blue;
+      \`;
+    `;
+    const result = await stylelint.lint({
+      customSyntax: {parse, stringify},
+      code: source,
+      codeFilename: 'foo.js',
+      fix: true,
+      config: {
+        rules: {
+          'no-extra-semicolons': true
+        }
+      }
+    });
+
+    assert.equal(
+      result.output,
+      `
+      css\`
+        $\{css\`
+          color: hotpink;
+        \`};
+
+        color: blue;
+      \`;
+    `
+    );
+  });
+
   it('should be compatible with indentation rule', async () => {
     const source = `
       css\`

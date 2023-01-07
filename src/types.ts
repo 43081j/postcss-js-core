@@ -37,4 +37,5 @@ export interface ExtractedStylesheet {
     offset: number;
   };
   indentationMap: Map<number, number>;
+  isNested: boolean;
 }

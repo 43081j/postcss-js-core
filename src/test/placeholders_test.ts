@@ -30,9 +30,9 @@ function getNodePathsFromTemplate(source: string): Array<NodePath<Node>> {
 
 describe('placeholders', () => {
   describe('computePossiblePosition', () => {
-    it('should use default when empty', () => {
+    it('should use block when empty', () => {
       const result = computePossiblePosition('');
-      assert.equal(result, 'default');
+      assert.equal(result, 'block');
     });
 
     it('should be statement if semi-colon encountered', () => {
@@ -150,6 +150,11 @@ describe('placeholders', () => {
       `);
       const result = createPlaceholder(808, nodes[0]!);
       assert.equal(result, 'whatever');
+    });
+
+    it('should use block placeholder if empty prefix', () => {
+      const result = createPlaceholder(808, nodes[0]!, '');
+      assert.equal(result, '/* POSTCSS_foo_808 */');
     });
 
     describe('default positions', () => {

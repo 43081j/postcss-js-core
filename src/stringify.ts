@@ -77,6 +77,14 @@ function createStringifierClass(
 
     /** @inheritdoc */
     public override root(node: Root): void {
+      const raws = node.raws[this._parseOptions.id] as
+        | ExtractedStylesheet
+        | undefined;
+
+      if (raws && raws.isNested) {
+        return;
+      }
+
       this.builder(node.raws.codeBefore ?? '', node, 'start');
 
       this.body(node);

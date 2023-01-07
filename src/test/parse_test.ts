@@ -18,6 +18,24 @@ describe('parse', () => {
       assert.equal(doc.nodes.length, 0);
     });
 
+    it('should support nested templates', () => {
+      const parse = createParser({id: 'foo', tagNames: ['css']});
+      const doc = parse(`
+        css\`
+          $\{css\`
+            color: hotpink;
+          \`}
+          color: blue;
+        \`;
+      `);
+      const root0 = doc.nodes[0] as Root;
+      const root1 = doc.nodes[1] as Root;
+
+      assert.equal(doc.nodes.length, 2);
+      assert.equal(root0.nodes.length, 2);
+      assert.equal(root1.nodes.length, 1);
+    });
+
     it('should skip and log invalid templates', () => {
       const stub = hanbi.stubMethod(console, 'warn');
       const parse = createParser({id: 'foo', tagNames: ['css']});
