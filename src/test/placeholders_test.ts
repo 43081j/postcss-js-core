@@ -123,6 +123,35 @@ describe('placeholders', () => {
       assert.equal(result, 'pink');
     });
 
+    it('should resolve one side of a simple conditional', () => {
+      nodes = getNodePathsFromTemplate(`
+        css\`
+          $\{unknownValue ? otherUnknown : 'b'};
+        \`;
+      `);
+      const result = createPlaceholder(808, nodes[0]!);
+      assert.equal(result, 'b');
+    });
+
+    it('should accept a custom evaluator', () => {
+      createPlaceholder = createPlaceholderFunc(
+        {
+          id: 'foo'
+        },
+        {
+          evaluator: () => 'whatever'
+        }
+      );
+
+      nodes = getNodePathsFromTemplate(`
+        css\`
+          $\{someConstant};
+        \`;
+      `);
+      const result = createPlaceholder(808, nodes[0]!);
+      assert.equal(result, 'whatever');
+    });
+
     describe('default positions', () => {
       it('should use default placeholder', () => {
         const result = createPlaceholder(808, nodes[0]!, '/* some comment */');
