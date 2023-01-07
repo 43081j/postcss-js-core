@@ -1,3 +1,5 @@
+import {NodePath} from '@babel/traverse';
+import {Node} from '@babel/types';
 import {PlaceholderFunc, SyntaxOptions} from './types.js';
 
 export type Position =
@@ -119,18 +121,64 @@ export function computePossiblePosition(
 }
 
 /**
+ * Tries to evaluate an AST node into a string value
+ * @param {NodePath<Node>} node Node to evaluate
+ * @return {string|undefined}
+ */
+export function tryEvaluateNode(node: NodePath<Node>): string | undefined {
+  // Try to resolve simple conditionals by choosing whichever side of the
+  // condition we can resolve.
+  // Otherwise, fall through to babel logic.
+  if (node.isConditionalExpression()) {
+    const left = tryEvaluateNode(node.get('consequent'));
+    const right = tryEvaluateNode(node.get('alternate'));
+
+    if (left !== undefined) {
+      return left;
+    }
+
+    if (right !== undefined) {
+      return right;
+    }
+  }
+
+  const val = node.evaluate();
+
+  if (val.confident) {
+    return val.value;
+  }
+
+  return undefined;
+}
+
+export interface PlaceholderOptions {
+  evaluator?: (node: NodePath<Node>) => string | undefined;
+}
+
+/**
  * Computes the placeholder for an expression
- * @param {SyntaxOptions} options Syntax options
+ * @param {SyntaxOptions} syntax Syntax options
+ * @param {PlaceholderOptions=} options Options to configure how placeholders
+ * are generated.
  * @return {PlaceholderFunc}
  */
-export function createPlaceholderFunc(options: SyntaxOptions): PlaceholderFunc {
-  return (i, before, after) => {
+export function createPlaceholderFunc(
+  syntax: SyntaxOptions,
+  options?: PlaceholderOptions
+): PlaceholderFunc {
+  return (i, node, before, after) => {
+    const value = (options?.evaluator ?? tryEvaluateNode)(node);
+
+    if (value !== undefined) {
+      return value;
+    }
+
     if (!before) {
-      return defaultPlaceholder(i, options.id);
+      return defaultPlaceholder(i, syntax.id);
     }
 
     const position = computePossiblePosition(before, after);
 
-    return (placeholderMapping[position] ?? defaultPlaceholder)(i, options.id);
+    return (placeholderMapping[position] ?? defaultPlaceholder)(i, syntax.id);
   };
 }

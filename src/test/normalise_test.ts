@@ -1,12 +1,13 @@
 import {assert} from 'chai';
 import {TaggedTemplateExpression} from '@babel/types';
+import {NodePath} from '@babel/traverse';
 import {computeNormalisedSource} from '../normalise.js';
 import {extractTemplatesFromSource} from '../extract.js';
 import {computeReplacedSource} from '../replacements.js';
 
 const computeNodeAndSource = (
   source: string
-): [string, TaggedTemplateExpression] => {
+): [string, NodePath<TaggedTemplateExpression>] => {
   const templates = extractTemplatesFromSource(source, {
     id: 'foo',
     tagNames: ['css']

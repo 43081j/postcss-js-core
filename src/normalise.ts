@@ -1,4 +1,5 @@
 import {TaggedTemplateExpression} from '@babel/types';
+import {NodePath} from '@babel/traverse';
 
 export interface NormalisedSourceResult {
   result: string;
@@ -12,12 +13,12 @@ export interface NormalisedSourceResult {
 /**
  * Computes the normalised source (whitespace, padding, etc)
  * @param {string} source Original source
- * @param {TaggedTemplateExpression} node Source node
+ * @param {NodePath<TaggedTemplateExpression>} node Source node
  * @return {IndentationMapResult}
  */
 export function computeNormalisedSource(
   source: string,
-  node: TaggedTemplateExpression
+  node: NodePath<TaggedTemplateExpression>
 ): NormalisedSourceResult {
   const result: NormalisedSourceResult = {
     result: '',
@@ -27,7 +28,8 @@ export function computeNormalisedSource(
       offset: 0
     }
   };
-  const baseIndentation = (node.quasi.loc?.end.column ?? 1) - 1;
+  const quasi = node.get('quasi');
+  const baseIndentation = (quasi.node.loc?.end.column ?? 1) - 1;
   const sourceLines = source.split('\n');
   const indentationPattern = new RegExp(`^[ \\t]{${baseIndentation}}`);
   const emptyLinePattern = /^[ \t\r]*$/;

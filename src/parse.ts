@@ -35,22 +35,24 @@ function parseStyles(
   const doc = new Document();
   let currentOffset = 0;
 
-  for (const node of extractedStyles) {
-    if (!node.quasi.range) {
+  for (const path of extractedStyles) {
+    const quasi = path.get('quasi');
+
+    if (!quasi.node.range) {
       continue;
     }
 
-    const startIndex = node.quasi.range[0] + 1;
+    const startIndex = quasi.node.range[0] + 1;
 
     const replacedSource = computeReplacedSource(
       source,
-      node,
+      path,
       computePlaceholder
     );
 
     const normalisedSource = computeNormalisedSource(
       replacedSource.result,
-      node
+      path
     );
 
     const extractedStylesheet: ExtractedStylesheet = {
@@ -71,7 +73,7 @@ function parseStyles(
     } catch (err) {
       if (err instanceof CssSyntaxError) {
         const file = postcssOptions?.from ?? 'unknown';
-        const line = node.loc?.start.line ?? 'unknown';
+        const line = path.node.loc?.start.line ?? 'unknown';
 
         console.warn(
           `[postcss (${options.id})]`,
@@ -107,12 +109,12 @@ function parseStyles(
     // it could just access root.parent to get the document...
     (root as Root & {document: Document}).document = doc;
 
-    const walker = locationCorrectionWalker(node, options);
+    const walker = locationCorrectionWalker(path, options);
     walker(root);
     root.walk(walker);
     doc.nodes.push(root);
 
-    currentOffset = node.quasi.range[1] - 1;
+    currentOffset = quasi.node.range[1] - 1;
   }
 
   if (doc.nodes.length > 0) {

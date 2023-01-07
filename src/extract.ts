@@ -36,8 +36,8 @@ function isSupportedTag(tag: string, supported: string[]): boolean {
 export function extractTemplatesFromSource(
   source: string,
   options: SyntaxOptions
-): Set<TaggedTemplateExpression> {
-  const extractedStyles = new Set<TaggedTemplateExpression>();
+): Set<NodePath<TaggedTemplateExpression>> {
+  const extractedStyles = new Set<NodePath<TaggedTemplateExpression>>();
   const tagNames = options?.tagNames;
 
   // Return early if there's no tag names to look for
@@ -60,14 +60,15 @@ export function extractTemplatesFromSource(
     TaggedTemplateExpression: (
       path: NodePath<TaggedTemplateExpression>
     ): void => {
-      if (path.node.tag.start !== null && path.node.tag.end !== null) {
-        const tag = source.slice(path.node.tag.start, path.node.tag.end);
+      const tagNode = path.get('tag');
+      if (tagNode.node.start !== null && tagNode.node.end !== null) {
+        const tag = tagNode.toString();
 
         if (
           isSupportedTag(tag, tagNames) &&
           !hasDisableComment(path, options)
         ) {
-          extractedStyles.add(path.node);
+          extractedStyles.add(path);
         }
       }
     }

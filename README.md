@@ -57,6 +57,12 @@ as follows:
 
   // Custom sub-stringifier _class_
   stringifier: require('postcss-less/lib/LessStringifier.js')
+
+  // Custom babel options for when parsing source JS
+  babelOptions: { ... },
+
+  // Custom function for generating placeholders for expressions
+  placeholder: customPlaceholderFn
 }
 ```
 
